@@ -28,11 +28,11 @@ export function LoginForm({ loginAction, labels, error, activated }: LoginFormPr
   };
 
   return (
-    <div className="panel relative overflow-hidden backdrop-blur-xl bg-white/80 border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] p-8 md:p-10 rounded-2xl">
+    <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] overflow-hidden border border-white/40 p-8 md:p-10">
       <div className="absolute top-0 right-0 -mt-4 -mr-4 size-24 bg-indigo-500/10 rounded-full blur-2xl" />
       <div className="absolute bottom-0 left-0 -mb-4 -ml-4 size-24 bg-blue-500/10 rounded-full blur-2xl" />
 
-      <div className="relative">
+      <div className="relative z-10">
         {activated ? (
           <div className="mb-6 p-4 bg-emerald-50/80 border border-emerald-100 rounded-xl flex items-start gap-3 backdrop-blur-sm">
             <CheckCircle className="size-5 text-emerald-600 shrink-0 mt-0.5" />
@@ -51,27 +51,31 @@ export function LoginForm({ loginAction, labels, error, activated }: LoginFormPr
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-indigo-950/80 mr-1">{labels.identifier}</label>
+            <label className="block text-sm font-semibold text-indigo-950/80 mr-1">
+              {labels.identifier}
+            </label>
             <input
               name="identifier"
               autoComplete="username"
               inputMode="email"
               dir="ltr"
               required
-              className="w-full h-12 px-4 bg-white/60 border border-indigo-100/80 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-indigo-200 text-indigo-950 font-medium text-start"
+              className="w-full h-12 px-4 bg-white/60 border border-indigo-100/80 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-indigo-200 text-indigo-950 font-medium text-start shadow-sm"
               placeholder="name@example.com"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-indigo-950/80 mr-1">{labels.password}</label>
+            <label className="block text-sm font-semibold text-indigo-950/80 mr-1">
+              {labels.password}
+            </label>
             <input
               name="password"
               type="password"
               autoComplete="current-password"
               dir="ltr"
               required
-              className="w-full h-12 px-4 bg-white/60 border border-indigo-100/80 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-indigo-200 text-indigo-950 font-medium text-start"
+              className="w-full h-12 px-4 bg-white/60 border border-indigo-100/80 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-indigo-200 text-indigo-950 font-medium text-start shadow-sm"
               placeholder="••••••••"
             />
           </div>
@@ -95,7 +99,7 @@ export function LoginForm({ loginAction, labels, error, activated }: LoginFormPr
           </button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-indigo-50 flex flex-col items-center gap-4 text-xs font-medium text-indigo-950/50">
+        <div className="mt-8 pt-6 border-t border-indigo-50 flex flex-col items-center gap-4 text-xs font-medium text-indigo-950/50 text-center">
           <p className="flex items-center gap-1.5">
             <Lock className="size-3.5" />
             {labels.secureNote}
