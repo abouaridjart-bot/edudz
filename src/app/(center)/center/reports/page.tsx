@@ -6,6 +6,7 @@ import { getActor } from "@/lib/session";
 import { PageHeader } from "@/components/ui/page-header";
 import { Alert } from "@/components/ui/alert";
 import { ExpenseForm } from "./expense-form";
+import { FinancialSummary } from "./financial-summary";
 
 export default async function ReportsPage({
   searchParams,
@@ -45,23 +46,15 @@ export default async function ReportsPage({
       {error ? <Alert variant="error">{error}</Alert> : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <ExpenseForm branches={branches} categories={categories} />
+          <FinancialSummary />
         </div>
 
         <div className="space-y-4">
           <div className="panel p-4">
-            <h3 className="mb-4 font-semibold">ملخص المركز</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">إجمالي المصاريف (هذا الشهر)</span>
-                <span className="font-mono font-semibold text-danger">—</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">إجمالي الأجور (هذا الشهر)</span>
-                <span className="font-mono font-semibold text-primary">—</span>
-              </div>
-            </div>
+            <h3 className="mb-4 font-semibold">إحصائيات إضافية</h3>
+            <p className="text-sm text-muted-foreground">سيتم إضافة المزيد من الرسوم البيانية والإحصائيات قريباً.</p>
           </div>
 
           <div className="panel p-4">
