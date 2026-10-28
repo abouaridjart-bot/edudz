@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { CalendarDays } from "lucide-react";
+import Link from "next/link";
 import { canList, allowedBranchIds, requireCenterId } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { getActor } from "@/lib/session";
@@ -34,7 +35,7 @@ export default async function SessionsPage() {
       ) : (
         <ul className="space-y-2">
           {sessions.map((s) => (
-            <li key={s.id} className="panel flex flex-wrap items-center justify-between gap-3 p-4">
+            <li key={s.id} className="panel flex flex-wrap items-center justify-between gap-3 p-4"><a href={`/center/sessions/${s.id}`} className="block w-full h-full" />
               <div className="min-w-0">
                 <p className="truncate font-semibold">
                   {s.group.name} · <span className="ltr-isolate">{s.startTime}–{s.endTime}</span>

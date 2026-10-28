@@ -38,7 +38,11 @@ export default async function AttendancePage() {
       />
 
       {sessions.length === 0 ? (
-        <EmptyState icon={ClipboardCheck} title="لا توجد حصص" description="ستظهر سجلات الحضور بعد إجراء الحصص." />
+        <EmptyState
+          icon={ClipboardCheck}
+          title="لا توجد حصص"
+          description="ستظهر سجلات الحضور بعد إجراء الحصص."
+        />
       ) : (
         <ul className="space-y-2">
           {sessions.map((s) => {
