@@ -61,7 +61,7 @@ export function LoginForm({ loginAction, labels, error, activated }: LoginFormPr
               dir="ltr"
               required
               className="w-full h-12 px-4 bg-white/60 border border-indigo-100/80 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-indigo-200 text-indigo-950 font-medium text-start shadow-sm"
-              placeholder="name@example.com"
+              placeholder="البريد الإلكتروني أو رقم الهاتف"
             />
           </div>
 
