@@ -1,11 +1,15 @@
-import { getActor } from "@/lib/session";
 import { redirect } from "next/navigation";
+import { ClipboardList } from "lucide-react";
 import { db } from "@/lib/db";
+import { getActor } from "@/lib/session";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ToneBadge } from "@/components/ui/status-badge";
 
 export default async function StudentQuizzesPage() {
   const actor = await getActor();
   if (!actor) redirect("/login");
-  if (actor.role !== "STUDENT" && actor.role !== "PARENT") redirect("/");
+  if (actor.role !== "STUDENT") redirect("/");
 
   const quizzes = await db.quiz.findMany({
     include: { lesson: true, questions: true },
@@ -13,16 +17,26 @@ export default async function StudentQuizzesPage() {
   });
 
   return (
-    <main className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">الاختبارات</h1>
-      <ul className="space-y-2">
-        {quizzes.map((q) => (
-          <li key={q.id} className="border rounded p-3">
-            <div className="font-semibold">{q.title}</div>
-            <div className="text-sm text-muted-foreground">عدد الأسئلة: {q.questions.length} / أقصى محاولات: {q.maxAttempts}</div>
-          </li>
-        ))}
-      </ul>
-    </main>
+    <div className="space-y-6">
+      <PageHeader title="الاختبارات" description="اختبارات ذاتية التصحيح مرتبطة بالدروس." />
+
+      {quizzes.length === 0 ? (
+        <EmptyState icon={ClipboardList} title="لا توجد اختبارات" description="ستظهر الاختبارات بعد نشرها من طرف الأساتذة." />
+      ) : (
+        <ul className="space-y-2">
+          {quizzes.map((q) => (
+            <li key={q.id} className="panel flex flex-wrap items-center justify-between gap-3 p-4">
+              <div className="min-w-0">
+                <p className="truncate font-semibold">{q.title}</p>
+                <p className="text-sm text-muted-foreground">
+                  {q.lesson ? q.lesson.title : "بدون درس"} · {q.questions.length} سؤال
+                </p>
+              </div>
+              <ToneBadge tone="neutral">حتى {q.maxAttempts} محاولات</ToneBadge>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

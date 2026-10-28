@@ -1,6 +1,12 @@
-import { getActor } from "@/lib/session";
 import { redirect } from "next/navigation";
+import { CalendarDays } from "lucide-react";
 import { db } from "@/lib/db";
+import { getActor } from "@/lib/session";
+import { formatDate, WEEKDAYS_AR, algiersParts } from "@/lib/dates";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { sessionStatus } from "@/lib/labels";
 
 export default async function TeacherSessionsPage() {
   const actor = await getActor();
@@ -18,16 +24,31 @@ export default async function TeacherSessionsPage() {
   });
 
   return (
-    <main className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">حصصي</h1>
-      <ul className="space-y-2">
-        {sessions.map((s) => (
-          <li key={s.id} className="border rounded p-3">
-            <div className="font-semibold">{s.group.name} - {s.date.toISOString().slice(0, 10)} {s.startTime}-{s.endTime}</div>
-            <div className="text-sm text-muted-foreground">{s.room.name} / {s.status}</div>
-          </li>
-        ))}
-      </ul>
-    </main>
+    <div className="space-y-6">
+      <PageHeader title="حصصي" description="كل الحصص المسندة إليك مرتبة حسب التاريخ." />
+
+      {sessions.length === 0 ? (
+        <EmptyState icon={CalendarDays} title="لا توجد حصص" description="ستظهر الحصص بعد توليد جدول الأفواج." />
+      ) : (
+        <ul className="space-y-2">
+          {sessions.map((s) => (
+            <li key={s.id} className="panel flex flex-wrap items-center justify-between gap-3 p-4">
+              <div className="min-w-0">
+                <p className="truncate font-semibold">
+                  {s.group.name} ·{" "}
+                  <span className="ltr-isolate">
+                    {s.startTime}–{s.endTime}
+                  </span>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {WEEKDAYS_AR[algiersParts(s.date).weekday]} {formatDate(s.date)} · {s.room.name}
+                </p>
+              </div>
+              <StatusBadge status={sessionStatus(s.status)} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

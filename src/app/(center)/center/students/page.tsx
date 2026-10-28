@@ -1,7 +1,12 @@
-import { getActor } from "@/lib/session";
 import { redirect } from "next/navigation";
+import { Users } from "lucide-react";
 import { branchWhere, canList, scopeWhere } from "@/lib/permissions";
 import { db } from "@/lib/db";
+import { getActor } from "@/lib/session";
+import { PageHeader } from "@/components/ui/page-header";
+import { Alert } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ToneBadge } from "@/components/ui/status-badge";
 import { StudentForm } from "./student-form";
 
 export default async function StudentsPage({
@@ -16,7 +21,7 @@ export default async function StudentsPage({
 
   const [students, branches, levels, streams] = await Promise.all([
     db.student.findMany({
-      where: scopeWhere(actor),
+      where: { ...scopeWhere(actor), deletedAt: null },
       include: { user: true, branch: true, level: true, stream: true },
       orderBy: { createdAt: "desc" },
       take: 100,
@@ -37,44 +42,60 @@ export default async function StudentsPage({
   ]);
 
   return (
-    <main className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">الطلاب</h1>
+    <div className="space-y-6">
+      <PageHeader
+        title="الطلاب"
+        description="سجل الطلاب، فروعهم ومستوياتهم، وحالة تفعيل حساباتهم."
+      />
 
-      {ok ? (
-        <p role="status" className="rounded border border-green-600/40 bg-green-600/10 p-3 text-sm">
-          {ok}
-        </p>
-      ) : null}
-      {error ? (
-        <p role="alert" className="rounded border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
+      {ok ? <Alert variant="success">{ok}</Alert> : null}
+      {error ? <Alert variant="error">{error}</Alert> : null}
 
       {canList(actor, "create", "student") ? (
         <StudentForm branches={branches} levels={levels} streams={streams} />
       ) : null}
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">قائمة الطلاب ({students.length})</h2>
+      <section className="panel overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b p-4">
+          <h2 className="font-bold">قائمة الطلاب</h2>
+          <ToneBadge tone="neutral">{students.length} طالب</ToneBadge>
+        </div>
         {students.length === 0 ? (
-          <p className="rounded border border-dashed p-3 text-sm text-muted-foreground">لا يوجد طلاب بعد.</p>
+          <div className="p-4">
+            <EmptyState
+              icon={Users}
+              title="لا يوجد طلاب بعد"
+              description="أضف أول طالب من النموذج أعلاه، ثم أسنِده إلى فوج لإنشاء فواتيره."
+            />
+          </div>
         ) : (
-          <ul className="space-y-2">
-            {students.map((s) => (
-              <li key={s.id} className="border rounded p-3">
-                <div className="font-semibold">{s.user?.fullName ?? "-"}</div>
-                <div className="text-sm text-muted-foreground">
-                  {s.branch?.name ?? "-"} / {s.level?.nameAr ?? "-"}
-                  {s.stream ? ` / ${s.stream.nameAr}` : ""}
-                  {s.user?.phone ? ` / ${s.user.phone}` : ""}
-                  {s.user && !s.user.isActive ? " / الحساب غير مفعّل" : ""}
-                </div>
-              </li>
-            ))}
+          <ul className="divide-y">
+            {students.map((s) => {
+              const name = s.user?.fullName ?? "—";
+              return (
+                <li key={s.id} className="flex flex-wrap items-center gap-3 p-4">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                    {name.trim().charAt(0) || "؟"}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {s.branch?.name ?? "—"} · {s.level?.nameAr ?? "—"}
+                      {s.stream ? ` · ${s.stream.nameAr}` : ""}
+                      {s.user?.phone ? ` · ${s.user.phone}` : ""}
+                    </p>
+                  </div>
+                  {s.user ? (
+                    <ToneBadge tone={s.user.isActive ? "success" : "warning"}>
+                      {s.user.isActive ? "حساب مفعّل" : "بانتظار التفعيل"}
+                    </ToneBadge>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
-    </main>
+    </div>
   );
 }

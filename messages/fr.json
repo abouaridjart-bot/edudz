@@ -39,6 +39,15 @@
     "secondary": "Secondaire",
     "secondaryText": "3 ans · se termine par le baccalauréat (BAC)"
   },
+  "auth": {
+    "loginTitle": "Connexion",
+    "loginSubtitle": "Utilisez votre e-mail ou votre numéro de téléphone enregistré pour accéder à votre espace.",
+    "identifier": "Téléphone ou e-mail",
+    "password": "Mot de passe",
+    "signIn": "Se connecter",
+    "invalid": "Identifiants incorrects ou compte désactivé.",
+    "secureNote": "Connexion chiffrée · session sécurisée"
+  },
   "shell": {
     "underConstruction": "En construction",
     "authNotice": "L'authentification et les droits d'accès arrivent à la phase 2. Cette page est ouverte temporairement pour le développement uniquement.",
@@ -48,6 +57,27 @@
     "centerText": "Le résumé du jour : séances, présence, paiements et impayés apparaîtront ici.",
     "adminTitle": "Administration générale",
     "adminText": "La gestion du programme, des contenus et des centres apparaîtra ici.",
-    "dashboard": "Tableau de bord"
+    "teacherTitle": "Espace enseignant",
+    "parentTitle": "Portail des parents",
+    "dashboard": "Tableau de bord",
+    "students": "Élèves",
+    "groups": "Groupes",
+    "sessions": "Séances et emploi du temps",
+    "attendance": "Présence",
+    "invoices": "Factures",
+    "payments": "Paiements",
+    "teachers": "Enseignants",
+    "branches": "Antennes et salles",
+    "reports": "Rapports",
+    "notifications": "Notifications",
+    "curriculum": "Programme",
+    "units": "Unités",
+    "lessons": "Leçons",
+    "years": "Années scolaires",
+    "invitations": "Invitations",
+    "quizzes": "Quiz",
+    "children": "Mes enfants",
+    "logout": "Se déconnecter",
+    "sectionNav": "Navigation de la section"
   }
 }

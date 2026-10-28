@@ -1,5 +1,6 @@
 // بيانات تجريبية فقط (`npm run db:seed:demo`) — ليست بيانات رسمية ولا تُستخدم في الإنتاج.
 // الهدف: تمرين مسارات المركز/الأستاذ/الولي/الطالب على قاعدة حقيقية.
+import { randomUUID } from "node:crypto";
 import { PrismaClient, Role, FeeType, PayMethod, SessionStatus, AttendStatus, InvoiceStatus } from "@prisma/client";
 import { hashPassword } from "../../src/lib/password";
 
@@ -172,22 +173,30 @@ async function main() {
   const levelsForStudents = [level4AP, level5AP, level1AM, level2AM];
   const firstNames = ["محمد", "أحمد", "يوسف", "إلياس", "أمينة", "سارة", "مريم", "نور", "زينب", "عبد الله"];
   const lastNames = ["بوزيد", "عماري", "بلقاسم", "حمدي", "بوعزة"];
+  // كلمة مرور غير معروفة للحسابات غير المفعّلة (طلاب التجربة ما عدا حساب الدخول).
+  const lockedPasswordHash = await hashPassword(randomUUID());
 
   const students = [];
   for (let i = 0; i < 40; i++) {
     const branch = branches[i % branches.length];
     const level = levelsForStudents[i % levelsForStudents.length];
-    const name = `${firstNames[i % firstNames.length]} ${lastNames[i % lastNames.length]}`;
-    let userId: string | null = null;
-    if (i === 0) {
-      const u = await makeUser("student@demo.edudz.dz", `${name} (طالب تجريبي)`, Role.STUDENT);
-      userId = u.id;
-    }
+    const name = `${firstNames[i % firstNames.length]} ${lastNames[Math.floor(i / firstNames.length) % lastNames.length]}`;
+    const isDemoLogin = i === 0;
+    const u = await prisma.user.create({
+      data: {
+        centerId: center.id,
+        email: isDemoLogin ? "student@demo.edudz.dz" : `student${i + 1}@demo.edudz.dz`,
+        fullName: isDemoLogin ? `${name} (طالب تجريبي)` : name,
+        role: Role.STUDENT,
+        passwordHash: isDemoLogin ? passwordHash : lockedPasswordHash,
+        isActive: isDemoLogin,
+      },
+    });
     students.push(
       await prisma.student.create({
         data: {
           centerId: center.id,
-          userId,
+          userId: u.id,
           branchId: branch.id,
           levelId: level.id,
           birthDate: d(-365 * (10 + (i % 6))),

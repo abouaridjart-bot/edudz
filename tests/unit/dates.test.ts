@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  academicYearLabel, algiersParts, formatDate, formatDateLong, formatDateTime, formatHHMM, isValidRange,
-  monthName, parseHHMM, rangesOverlap, weekdayName,
+  academicYearLabel, algiersParts, formatDate, formatDateLong, formatDateTime, formatHHMM, formatPeriod, isValidRange,
+  monthName, parseHHMM, rangesOverlap, startOfMonthInAlgiers, todayInAlgiers, weekdayName,
 } from "@/lib/dates";
 
 describe("dates (Africa/Algiers)", () => {
@@ -56,5 +56,25 @@ describe("dates (Africa/Algiers)", () => {
     expect(isValidRange(600, 600)).toBe(false);
     expect(isValidRange(700, 600)).toBe(false);
     expect(isValidRange(-1, 600)).toBe(false);
+  });
+
+  it("فترة الفاتورة YYYY-MM", () => {
+    expect(formatPeriod("2026-10")).toBe("أكتوبر 2026");
+    expect(formatPeriod("2026-01")).toBe("جانفي 2026");
+    expect(formatPeriod("2026-01", "fr")).toBe("janvier 2026");
+    expect(formatPeriod("2026-13")).toBe("2026-13");
+    expect(formatPeriod("bad")).toBe("bad");
+  });
+
+  it("حدود اليوم والشهر بتوقيت الجزائر (UTC midnight)", () => {
+    const p = algiersParts(new Date());
+    const today = todayInAlgiers();
+    expect(today.toISOString()).toBe(
+      `${p.year}-${String(p.month).padStart(2, "0")}-${String(p.day).padStart(2, "0")}T00:00:00.000Z`,
+    );
+    const monthStart = startOfMonthInAlgiers();
+    expect(monthStart.toISOString()).toBe(
+      `${p.year}-${String(p.month).padStart(2, "0")}-01T00:00:00.000Z`,
+    );
   });
 });

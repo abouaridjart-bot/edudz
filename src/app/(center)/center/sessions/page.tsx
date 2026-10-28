@@ -1,8 +1,13 @@
-import { getActor } from "@/lib/session";
 import { redirect } from "next/navigation";
-import { canList } from "@/lib/permissions";
+import { CalendarDays } from "lucide-react";
+import { canList, allowedBranchIds, requireCenterId } from "@/lib/permissions";
 import { db } from "@/lib/db";
-import { allowedBranchIds, requireCenterId } from "@/lib/permissions";
+import { getActor } from "@/lib/session";
+import { formatDate, WEEKDAYS_AR, algiersParts } from "@/lib/dates";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { sessionStatus } from "@/lib/labels";
 
 export default async function SessionsPage() {
   const actor = await getActor();
@@ -21,16 +26,28 @@ export default async function SessionsPage() {
   });
 
   return (
-    <main className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">الجداول والحصص</h1>
-      <ul className="space-y-2">
-        {sessions.map((s) => (
-          <li key={s.id} className="border rounded p-3">
-            <div className="font-semibold">{s.group.name} - {s.date.toISOString().slice(0, 10)} {s.startTime} - {s.endTime}</div>
-            <div className="text-sm text-muted-foreground">{s.room.name} / {s.teacher.user.fullName} / {s.status}</div>
-          </li>
-        ))}
-      </ul>
-    </main>
+    <div className="space-y-6">
+      <PageHeader title="الحصص والجداول" description="الحصص القادمة مرتبة حسب التاريخ والتوقيت." />
+
+      {sessions.length === 0 ? (
+        <EmptyState icon={CalendarDays} title="لا توجد حصص" description="ستظهر الحصص بعد إنشاء الأفواج وتوليد الجدول." />
+      ) : (
+        <ul className="space-y-2">
+          {sessions.map((s) => (
+            <li key={s.id} className="panel flex flex-wrap items-center justify-between gap-3 p-4">
+              <div className="min-w-0">
+                <p className="truncate font-semibold">
+                  {s.group.name} · <span className="ltr-isolate">{s.startTime}–{s.endTime}</span>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {WEEKDAYS_AR[algiersParts(s.date).weekday]} {formatDate(s.date)} · {s.room.name} · {s.teacher.user.fullName}
+                </p>
+              </div>
+              <StatusBadge status={sessionStatus(s.status)} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

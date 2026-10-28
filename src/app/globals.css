@@ -57,6 +57,29 @@
   .ltr-isolate {
     unicode-bidi: isolate;
   }
+
+  ::selection {
+    @apply bg-primary/20 text-foreground;
+  }
+}
+
+@layer components {
+  /* بطاقة موحّدة لكل القوائم والأقسام */
+  .panel {
+    @apply rounded-xl border bg-card shadow-sm;
+  }
+
+  .panel-body {
+    @apply p-4 md:p-5;
+  }
+
+  .field-label {
+    @apply block text-sm font-medium text-foreground;
+  }
+
+  .field-input {
+    @apply min-h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-60;
+  }
 }
 
 @media print {

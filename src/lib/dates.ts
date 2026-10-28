@@ -41,6 +41,21 @@ export function algiersParts(date: Date): AlgiersParts {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+/**
+ * تاريخ اليوم كـ UTC midnight بتوقيت الجزائر — للمقارنة مع أعمدة `@db.Date`.
+ * (تخزين Prisma لأعمدة Date يكون منتصف ليل UTC.)
+ */
+export function todayInAlgiers(): Date {
+  const p = algiersParts(new Date());
+  return new Date(Date.UTC(p.year, p.month - 1, p.day));
+}
+
+/** أول يوم من الشهر الحالي (UTC midnight) بتوقيت الجزائر. */
+export function startOfMonthInAlgiers(): Date {
+  const p = algiersParts(new Date());
+  return new Date(Date.UTC(p.year, p.month - 1, 1));
+}
+
 /** DD/MM/YYYY */
 export function formatDate(date: Date): string {
   const p = algiersParts(date);
@@ -74,6 +89,15 @@ export function monthName(month: number, locale: "ar" | "fr" = "ar", style: Mont
 export function weekdayName(weekday: number, locale: "ar" | "fr" = "ar"): string {
   if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6) throw new RangeError("weekday must be 0..6");
   return (locale === "fr" ? WEEKDAYS_FR : WEEKDAYS_AR)[weekday] as string;
+}
+
+/** "2026-10" → "أكتوبر 2026" (فترة الفاتورة). */
+export function formatPeriod(period: string, locale: "ar" | "fr" = "ar", style: MonthStyle = "dz"): string {
+  const m = /^(\d{4})-(\d{2})$/.exec(period);
+  if (!m) return period;
+  const month = Number(m[2]);
+  if (month < 1 || month > 12) return period;
+  return `${monthName(month, locale, style)} ${m[1]}`;
 }
 
 /** "27 أكتوبر 2026" */
