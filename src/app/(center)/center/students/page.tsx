@@ -1,13 +1,13 @@
-import { getActor } from "@/lib/session";
+﻿import { getActor } from "@/lib/session";
 import { redirect } from "next/navigation";
-import { can } from "@/lib/permissions";
+import { canList } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { scopeWhere } from "@/lib/permissions";
 
 export default async function StudentsPage() {
   const actor = await getActor();
   if (!actor) redirect("/login");
-  if (!can(actor, "read", "student", { centerId: actor.centerId })) redirect("/");
+  if (!canList(actor, "read", "student")) redirect("/");
 
   const students = await db.student.findMany({
     where: scopeWhere(actor),
@@ -18,7 +18,7 @@ export default async function StudentsPage() {
 
   return (
     <main className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">الطلاب</h1>
+      <h1 className="text-2xl font-bold">Ø§Ù„Ø·Ù„Ø§Ø¨</h1>
       <ul className="space-y-2">
         {students.map((s) => (
           <li key={s.id} className="border rounded p-3">

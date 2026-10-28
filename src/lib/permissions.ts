@@ -48,6 +48,7 @@ export const MATRIX: Matrix = {
   BRANCH_MANAGER: {
     lesson: { actions: ALL, scope: "branch" },
     room: { actions: ALL, scope: "branch" },
+    branch: { actions: R, scope: "branch" },
     student: { actions: ALL, scope: "branch" },
     parent: { actions: RCU, scope: "branch" },
     teacher: { actions: R, scope: "branch" },
@@ -62,6 +63,8 @@ export const MATRIX: Matrix = {
   },
   SECRETARY: {
     room: { actions: R, scope: "branch" },
+    branch: { actions: R, scope: "branch" },
+    teacher: { actions: R, scope: "branch" },
     student: { actions: RCU, scope: "branch" },
     parent: { actions: RCU, scope: "branch" },
     group: { actions: R, scope: "branch" },
@@ -128,6 +131,18 @@ export function canRole(role: Role, action: Action, resource: Resource): boolean
   return MATRIX[role][resource]?.actions.includes(action) ?? false;
 }
 
+/**
+ * فحص القدرة على مستوى **قائمة** لا صفّ محدد: يكفي أن الدور يملك الإجراء وأن المستخدم
+ * مرتبط بمركز (لنطاقي center/branch). تصفية الصفوف نفسها تتم عبر `scopeWhere`.
+ * لا تستخدمها بديلاً عن `can` عند تعديل/قراءة صف بعينه.
+ */
+export function canList(actor: Actor, action: Action, resource: Resource): boolean {
+  const rule = MATRIX[actor.role][resource];
+  if (!rule || !rule.actions.includes(action)) return false;
+  if (rule.scope === "center" || rule.scope === "branch") return !!actor.centerId;
+  return true; // platform / own / children: التصفية في الاستعلام نفسه
+}
+
 /** فحص الأمان الصارم: الدور + النطاق + بيانات الهدف. أي نقص = رفض. */
 export function can(actor: Actor, action: Action, resource: Resource, target: Target = {}): boolean {
   const rule = MATRIX[actor.role][resource];
@@ -168,8 +183,20 @@ export function requireCenterId(actor: Actor): string {
 /** شرط where جاهز للدمج في استعلامات Prisma: مركز المستخدم + فروعه إن كان محصوراً بفروع. */
 export function scopeWhere(actor: Actor): { centerId: string; branchId?: { in: string[] } } {
   const centerId = requireCenterId(actor);
-  if (actor.role === "BRANCH_MANAGER" || actor.role === "SECRETARY") {
+  if (isBranchScoped(actor)) {
     return { centerId, branchId: { in: [...(actor.branchIds ?? [])] } };
   }
   return { centerId };
+}
+
+function isBranchScoped(actor: Actor): boolean {
+  return actor.role === "BRANCH_MANAGER" || actor.role === "SECRETARY";
+}
+
+/**
+ * الفروع المسموحة للمستخدم، أو `undefined` إذا كان الوصول لكل فروع المركز.
+ * تُستخدم للجداول التي لا تحمل `branchId` (Session, Invoice, Teacher…): يُبنى الشرط على علاقة وسيطة.
+ */
+export function allowedBranchIds(actor: Actor): string[] | undefined {
+  return isBranchScoped(actor) ? [...(actor.branchIds ?? [])] : undefined;
 }

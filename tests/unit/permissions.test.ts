@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MATRIX, RESOURCES, ROLES, TenantError, can, canRole, requireCenterId, scopeWhere, type Actor } from "@/lib/permissions";
+import { MATRIX, RESOURCES, ROLES, TenantError, allowedBranchIds, can, canList, canRole, requireCenterId, scopeWhere, type Actor } from "@/lib/permissions";
 
 const owner: Actor = { id: "u-owner", role: "CENTER_OWNER", centerId: "c1" };
 const manager: Actor = { id: "u-mgr", role: "BRANCH_MANAGER", centerId: "c1", branchIds: ["b1"] };
@@ -76,6 +76,32 @@ describe("permissions", () => {
   it("canRole للواجهة", () => {
     expect(canRole("SECRETARY", "create", "payment")).toBe(true);
     expect(canRole("PARENT", "create", "payment")).toBe(false);
+  });
+
+  it("canList: قوائم المركز متاحة للمدير/السكرتير ضمن مركزهم (والتصفية عبر scopeWhere)", () => {
+    // الحالات التي كانت تُعيد 307 خطأً رغم أن الدور يملك القراءة
+    expect(canList(manager, "read", "student")).toBe(true);
+    expect(canList(manager, "read", "group")).toBe(true);
+    expect(canList(manager, "read", "branch")).toBe(true);
+    expect(canList(secretary, "read", "student")).toBe(true);
+    expect(canList(secretary, "read", "group")).toBe(true);
+    expect(canList(secretary, "read", "branch")).toBe(true);
+    expect(canList(manager, "read", "attendance")).toBe(true);
+    // ما لا يملكه الدور يبقى مرفوضاً
+    expect(canList(manager, "delete", "branch")).toBe(false);
+    expect(canList(manager, "read", "payout")).toBe(false);
+    expect(canList(manager, "read", "expense")).toBe(false);
+    expect(canList(secretary, "delete", "student")).toBe(false);
+    expect(canList(admin, "read", "student")).toBe(false);
+    // بلا مركز = رفض للقوائم المرتبطة بمركز
+    expect(canList({ ...manager, centerId: null }, "read", "student")).toBe(false);
+  });
+
+  it("allowedBranchIds: حصر الفروع للمدير/السكرتير فقط", () => {
+    expect(allowedBranchIds(manager)).toEqual(["b1"]);
+    expect(allowedBranchIds(secretary)).toEqual(["b1"]);
+    expect(allowedBranchIds(owner)).toBeUndefined();
+    expect(allowedBranchIds(teacher)).toBeUndefined();
   });
 
   it("scopeWhere و requireCenterId", () => {
