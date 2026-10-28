@@ -40,10 +40,10 @@ describe("permissions", () => {
     expect(can(secretary, "delete", "student", t)).toBe(false);
   });
 
-  it("المدير لا يرى الأجور ولا المصاريف", () => {
+  it("المدير يرى الأجور والمصاريف", () => {
     const t = { centerId: "c1", branchId: "b1" };
-    expect(can(manager, "read", "payout", t)).toBe(false);
-    expect(can(manager, "read", "expense", t)).toBe(false);
+    expect(can(manager, "read", "payout", t)).toBe(true);
+    expect(can(manager, "read", "expense", t)).toBe(true);
   });
 
   it("الأستاذ: أفواجه فقط", () => {
@@ -91,8 +91,8 @@ describe("permissions", () => {
     expect(canList(manager, "read", "attendance")).toBe(true);
     // ما لا يملكه الدور يبقى مرفوضاً
     expect(canList(manager, "delete", "branch")).toBe(false);
-    expect(canList(manager, "read", "payout")).toBe(false);
-    expect(canList(manager, "read", "expense")).toBe(false);
+    expect(canList(manager, "read", "payout")).toBe(true);
+    expect(canList(manager, "read", "expense")).toBe(true);
     expect(canList(secretary, "delete", "student")).toBe(false);
     expect(canList(admin, "read", "student")).toBe(false);
     // بلا مركز = رفض للقوائم المرتبطة بمركز
