@@ -1,0 +1,731 @@
+// EduDZ — نموذج البيانات (المرحلة 1).
+// قواعد: المال Int بالدينار · كل جدول مرتبط بمركز يحمل centerId (يُفلتر عبر lib/permissions.scopeWhere)
+// · الحذف الناعم deletedAt للكيانات الأساسية · التواريخ UTC وتُعرض بتوقيت Africa/Algiers.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ───────────── Enums ─────────────
+enum Role {
+  SUPER_ADMIN
+  CENTER_OWNER
+  BRANCH_MANAGER
+  SECRETARY
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+enum Cycle {
+  PRIMARY
+  MIDDLE
+  SECONDARY
+}
+
+enum Visibility {
+  PUBLIC
+  CENTER
+  GROUP
+}
+
+enum PublishStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+}
+
+enum ExamKind {
+  PRIMARY_CERT
+  BEM
+  BAC
+  TRIMESTER_EXAM
+}
+
+enum QuestionType {
+  MCQ
+  TRUE_FALSE
+  SHORT
+}
+
+enum GroupStatus {
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum EnrollStatus {
+  ACTIVE
+  WAITLIST
+  LEFT
+}
+
+enum SessionStatus {
+  PLANNED
+  DONE
+  CANCELLED
+  MAKEUP
+}
+
+enum AttendStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum FeeType {
+  MONTHLY
+  PER_SESSION
+  TERM
+  PACKAGE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PARTIAL
+  PAID
+  VOID
+}
+
+enum PayMethod {
+  CASH
+  CCP
+  BARIDIMOB
+  BANK
+  OTHER
+}
+
+enum PayModel {
+  PERCENT
+  HOURLY
+  PER_SESSION
+  FIXED
+}
+
+// ───────────── الهوية والمراكز ─────────────
+model Wilaya {
+  id         Int      @id
+  nameAr     String
+  nameFr     String?
+  sourceNote String?
+  branches   Branch[]
+}
+
+model Center {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  branches  Branch[]
+  users     User[]
+}
+
+model Branch {
+  id        String        @id @default(cuid())
+  centerId  String
+  name      String
+  wilayaId  Int?
+  address   String?
+  phone     String?
+  /// أيام عمل الفرع (0=الأحد … 6=السبت)
+  weekDays  Int[]
+  createdAt DateTime      @default(now())
+  center    Center        @relation(fields: [centerId], references: [id])
+  wilaya    Wilaya?       @relation(fields: [wilayaId], references: [id])
+  rooms     Room[]
+  groups    Group[]
+  students  Student[]
+  staff     BranchStaff[]
+
+  @@index([centerId])
+}
+
+model BranchStaff {
+  id       String @id @default(cuid())
+  branchId String
+  userId   String
+  branch   Branch @relation(fields: [branchId], references: [id])
+  user     User   @relation(fields: [userId], references: [id])
+
+  @@unique([branchId, userId])
+  @@index([userId])
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  centerId            String?
+  role                Role
+  /// بصيغة E.164 (+213…)
+  phone               String?              @unique
+  email               String?              @unique
+  passwordHash        String
+  fullName            String
+  locale              String               @default("ar")
+  isActive            Boolean              @default(true)
+  deletedAt           DateTime?
+  createdAt           DateTime             @default(now())
+  center              Center?              @relation(fields: [centerId], references: [id])
+  student             Student?
+  teacher             Teacher?
+  parent              Parent?
+  passwordResetTokens PasswordResetToken[]
+  branchStaff         BranchStaff[]
+
+  @@index([centerId, role])
+}
+
+model Parent {
+  id       String          @id @default(cuid())
+  userId   String          @unique
+  user     User            @relation(fields: [userId], references: [id])
+  children ParentStudent[]
+}
+
+model ParentStudent {
+  parentId  String
+  studentId String
+  parent    Parent  @relation(fields: [parentId], references: [id])
+  student   Student @relation(fields: [studentId], references: [id])
+
+  @@id([parentId, studentId])
+}
+
+// ───────────── السنة الدراسية ─────────────
+model AcademicYear {
+  id        String   @id @default(cuid())
+  /// مثل 2026/2027
+  label     String   @unique
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  isCurrent Boolean  @default(false)
+  terms     Term[]
+}
+
+model Term {
+  id             String       @id @default(cuid())
+  academicYearId String
+  /// 1..3
+  number         Int
+  startDate      DateTime     @db.Date
+  endDate        DateTime     @db.Date
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  @@unique([academicYearId, number])
+}
+
+// ───────────── المنهاج ─────────────
+model Level {
+  id       String         @id @default(cuid())
+  code     String         @unique
+  cycle    Cycle
+  nameAr   String
+  nameFr   String?
+  order    Int
+  streams  Stream[]
+  subjects LevelSubject[]
+  students Student[]
+  groups   Group[]
+}
+
+model Stream {
+  id       String         @id @default(cuid())
+  levelId  String
+  code     String
+  nameAr   String
+  nameFr   String?
+  level    Level          @relation(fields: [levelId], references: [id])
+  subjects LevelSubject[]
+  students Student[]
+  groups   Group[]
+
+  @@unique([levelId, code])
+}
+
+model Subject {
+  id     String         @id @default(cuid())
+  code   String         @unique
+  nameAr String
+  nameFr String?
+  levels LevelSubject[]
+  groups Group[]
+}
+
+/// ربط مادة بمستوى (وشعبة اختيارياً). المعامل والحجم الساعي يدخلهما المشرف من المصدر الرسمي.
+model LevelSubject {
+  id          String        @id @default(cuid())
+  levelId     String
+  streamId    String?
+  subjectId   String
+  coefficient Int?
+  weeklyHours Float?
+  sourceNote  String?
+  level       Level         @relation(fields: [levelId], references: [id])
+  stream      Stream?       @relation(fields: [streamId], references: [id])
+  subject     Subject       @relation(fields: [subjectId], references: [id])
+  units       Unit[]
+  exams       ExamArchive[]
+
+  @@unique([levelId, streamId, subjectId])
+}
+
+model Unit {
+  id             String       @id @default(cuid())
+  levelSubjectId String
+  title          String
+  order          Int
+  term           Int?
+  levelSubject   LevelSubject @relation(fields: [levelSubjectId], references: [id])
+  lessons        Lesson[]
+
+  @@index([levelSubjectId])
+}
+
+model Lesson {
+  id          String        @id @default(cuid())
+  unitId      String
+  authorId    String
+  title       String
+  summary     String?
+  body        String        @db.Text
+  videoUrl    String?
+  term        Int?
+  difficulty  Int?
+  tags        String[]
+  /// نص مُطبَّع للبحث (lib/arabic.normalizeArabic)
+  searchText  String        @db.Text
+  status      PublishStatus @default(DRAFT)
+  visibility  Visibility    @default(PUBLIC)
+  centerId    String?
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  unit        Unit          @relation(fields: [unitId], references: [id])
+  attachments Attachment[]
+  quizzes     Quiz[]
+
+  @@index([unitId, status])
+  @@index([centerId, visibility])
+}
+
+model Attachment {
+  id         String       @id @default(cuid())
+  lessonId   String?
+  examId     String?
+  storageKey String
+  fileName   String?
+  mime       String
+  size       Int
+  createdAt  DateTime     @default(now())
+  lesson     Lesson?      @relation(fields: [lessonId], references: [id])
+  exam       ExamArchive? @relation(fields: [examId], references: [id])
+}
+
+model ExamArchive {
+  id             String        @id @default(cuid())
+  levelSubjectId String
+  kind           ExamKind
+  year           Int
+  /// عادية / استدراكية …
+  session        String?
+  durationMin    Int?
+  status         PublishStatus @default(DRAFT)
+  createdAt      DateTime      @default(now())
+  levelSubject   LevelSubject  @relation(fields: [levelSubjectId], references: [id])
+  files          Attachment[]
+
+  @@index([kind, year])
+}
+
+// ───────────── التفاعل التعليمي ─────────────
+model Quiz {
+  id          String     @id @default(cuid())
+  lessonId    String?
+  title       String
+  maxAttempts Int        @default(3)
+  lesson      Lesson?    @relation(fields: [lessonId], references: [id])
+  questions   Question[]
+  attempts    Attempt[]
+}
+
+model Question {
+  id              String       @id @default(cuid())
+  quizId          String
+  type            QuestionType
+  prompt          String       @db.Text
+  explanation     String?      @db.Text
+  points          Int          @default(1)
+  acceptedAnswers String[]
+  quiz            Quiz         @relation(fields: [quizId], references: [id])
+  options         Option[]
+}
+
+model Option {
+  id         String   @id @default(cuid())
+  questionId String
+  text       String
+  isCorrect  Boolean
+  question   Question @relation(fields: [questionId], references: [id])
+}
+
+model Attempt {
+  id         String    @id @default(cuid())
+  quizId     String
+  studentId  String
+  score      Int
+  maxScore   Int
+  answers    Json
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  quiz       Quiz      @relation(fields: [quizId], references: [id])
+  student    Student   @relation(fields: [studentId], references: [id])
+
+  @@index([studentId, quizId])
+}
+
+model Assignment {
+  id           String       @id @default(cuid())
+  centerId     String
+  groupId      String?
+  teacherId    String
+  title        String
+  instructions String       @db.Text
+  dueAt        DateTime?
+  createdAt    DateTime     @default(now())
+  group        Group?       @relation(fields: [groupId], references: [id])
+  submissions  Submission[]
+
+  @@index([centerId, groupId])
+}
+
+model Submission {
+  id           String     @id @default(cuid())
+  assignmentId String
+  studentId    String
+  text         String?    @db.Text
+  fileKey      String?
+  /// 0..20 بخطوة 0.25
+  grade        Decimal?   @db.Decimal(4, 2)
+  feedback     String?    @db.Text
+  submittedAt  DateTime   @default(now())
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  student      Student    @relation(fields: [studentId], references: [id])
+
+  @@unique([assignmentId, studentId])
+}
+
+// ───────────── جناح المركز ─────────────
+model Room {
+  id       String         @id @default(cuid())
+  centerId String
+  branchId String
+  name     String
+  capacity Int
+  branch   Branch         @relation(fields: [branchId], references: [id])
+  groups   Group[]
+  slots    ScheduleSlot[]
+  sessions Session[]
+
+  @@index([centerId])
+}
+
+model Student {
+  id          String          @id @default(cuid())
+  centerId    String
+  userId      String?         @unique
+  branchId    String
+  levelId     String
+  streamId    String?
+  birthDate   DateTime?       @db.Date
+  schoolName  String?
+  notes       String?         @db.Text
+  deletedAt   DateTime?
+  createdAt   DateTime        @default(now())
+  user        User?           @relation(fields: [userId], references: [id])
+  branch      Branch          @relation(fields: [branchId], references: [id])
+  level       Level           @relation(fields: [levelId], references: [id])
+  stream      Stream?         @relation(fields: [streamId], references: [id])
+  parents     ParentStudent[]
+  enrollments Enrollment[]
+  attempts    Attempt[]
+  submissions Submission[]
+  attendance  Attendance[]
+
+  @@index([centerId, branchId])
+}
+
+model Teacher {
+  id        String            @id @default(cuid())
+  centerId  String
+  userId    String            @unique
+  /// رموز المواد (Subject.code)
+  subjects  String[]
+  user      User              @relation(fields: [userId], references: [id])
+  groups    Group[]
+  sessions  Session[]
+  contracts TeacherContract[]
+  payouts   Payout[]
+
+  @@index([centerId])
+}
+
+model FeePlan {
+  id              String  @id @default(cuid())
+  centerId        String
+  name            String
+  type            FeeType
+  /// بالدينار (Int)
+  amount          Int
+  registrationFee Int     @default(0)
+  groups          Group[]
+
+  @@index([centerId])
+}
+
+model Group {
+  id          String         @id @default(cuid())
+  centerId    String
+  branchId    String
+  subjectId   String
+  levelId     String
+  streamId    String?
+  teacherId   String
+  roomId      String?
+  feePlanId   String
+  name        String
+  capacity    Int
+  startDate   DateTime       @db.Date
+  endDate     DateTime?      @db.Date
+  status      GroupStatus    @default(ACTIVE)
+  createdAt   DateTime       @default(now())
+  branch      Branch         @relation(fields: [branchId], references: [id])
+  subject     Subject        @relation(fields: [subjectId], references: [id])
+  level       Level          @relation(fields: [levelId], references: [id])
+  stream      Stream?        @relation(fields: [streamId], references: [id])
+  teacher     Teacher        @relation(fields: [teacherId], references: [id])
+  room        Room?          @relation(fields: [roomId], references: [id])
+  feePlan     FeePlan        @relation(fields: [feePlanId], references: [id])
+  slots       ScheduleSlot[]
+  sessions    Session[]
+  enrollments Enrollment[]
+  assignments Assignment[]
+
+  @@index([centerId, branchId])
+}
+
+model Enrollment {
+  id          String       @id @default(cuid())
+  centerId    String
+  studentId   String
+  groupId     String
+  status      EnrollStatus @default(ACTIVE)
+  startDate   DateTime     @db.Date
+  endDate     DateTime?    @db.Date
+  discountPct Int          @default(0)
+  createdAt   DateTime     @default(now())
+  student     Student      @relation(fields: [studentId], references: [id])
+  group       Group        @relation(fields: [groupId], references: [id])
+  invoices    Invoice[]
+
+  @@index([groupId, status])
+  @@index([centerId, studentId])
+}
+
+model ScheduleSlot {
+  id        String @id @default(cuid())
+  centerId  String
+  groupId   String
+  roomId    String
+  /// 0=الأحد … 6=السبت
+  weekday   Int
+  /// HH:mm
+  startTime String
+  endTime   String
+  group     Group  @relation(fields: [groupId], references: [id])
+  room      Room   @relation(fields: [roomId], references: [id])
+
+  @@index([centerId, roomId, weekday])
+}
+
+model Session {
+  id         String        @id @default(cuid())
+  centerId   String
+  groupId    String
+  roomId     String
+  teacherId  String
+  date       DateTime      @db.Date
+  startTime  String
+  endTime    String
+  status     SessionStatus @default(PLANNED)
+  group      Group         @relation(fields: [groupId], references: [id])
+  room       Room          @relation(fields: [roomId], references: [id])
+  teacher    Teacher       @relation(fields: [teacherId], references: [id])
+  attendance Attendance[]
+
+  @@unique([groupId, date, startTime])
+  @@index([centerId, date])
+}
+
+model Attendance {
+  id        String       @id @default(cuid())
+  centerId  String
+  sessionId String
+  studentId String
+  status    AttendStatus
+  note      String?
+  markedBy  String
+  markedAt  DateTime     @default(now())
+  session   Session      @relation(fields: [sessionId], references: [id])
+  student   Student      @relation(fields: [studentId], references: [id])
+
+  @@unique([sessionId, studentId])
+  @@index([centerId, studentId])
+}
+
+model Invoice {
+  id           String        @id @default(cuid())
+  centerId     String
+  enrollmentId String
+  /// YYYY-MM
+  period       String
+  total        Int
+  paid         Int           @default(0)
+  status       InvoiceStatus @default(DRAFT)
+  dueDate      DateTime?     @db.Date
+  createdAt    DateTime      @default(now())
+  enrollment   Enrollment    @relation(fields: [enrollmentId], references: [id])
+  payments     Payment[]
+
+  @@unique([enrollmentId, period])
+  @@index([centerId, status])
+}
+
+model Payment {
+  id         String    @id @default(cuid())
+  centerId   String
+  branchId   String
+  invoiceId  String
+  /// موجب للدفعة، وسالب لقيد عكسي (reversedOf)
+  amount     Int
+  method     PayMethod
+  receiptNo  String
+  paidAt     DateTime  @default(now())
+  receivedBy String
+  reversedOf String?
+  invoice    Invoice   @relation(fields: [invoiceId], references: [id])
+
+  @@unique([branchId, receiptNo])
+  @@index([centerId, paidAt])
+}
+
+model TeacherContract {
+  id        String   @id @default(cuid())
+  centerId  String
+  teacherId String
+  model     PayModel
+  /// PERCENT: نقطة مئوية ×100 (3750 = 37.5%) · غيره: دينار
+  rate      Int
+  groupId   String?
+  teacher   Teacher  @relation(fields: [teacherId], references: [id])
+
+  @@index([centerId, teacherId])
+}
+
+model Payout {
+  id        String  @id @default(cuid())
+  centerId  String
+  teacherId String
+  /// YYYY-MM
+  period    String
+  gross     Int
+  advances  Int     @default(0)
+  net       Int
+  status    String  @default("DRAFT")
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+
+  @@unique([teacherId, period])
+}
+
+model Expense {
+  id       String   @id @default(cuid())
+  centerId String
+  branchId String
+  category String
+  amount   Int
+  date     DateTime @db.Date
+  note     String?
+
+  @@index([centerId, branchId, date])
+}
+
+model AuditLog {
+  id       String   @id @default(cuid())
+  centerId String?
+  actorId  String
+  action   String
+  entity   String
+  entityId String?
+  meta     Json?
+  at       DateTime @default(now())
+
+  @@index([centerId, entity, at])
+}
+
+model LoginAttempt {
+  id         String   @id @default(cuid())
+  identifier String
+  ip         String?
+  success    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([identifier, createdAt])
+}
+
+model Invitation {
+  id         String    @id @default(cuid())
+  centerId   String?
+  email      String?
+  phone      String?
+  role       Role
+  token      String    @unique
+  invitedBy  String
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([token])
+  @@index([centerId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([token])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  centerId  String?
+  userId    String?
+  titleAr   String
+  bodyAr    String
+  read      Boolean  @default(false)
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, read, createdAt])
+  @@index([centerId, createdAt])
+}

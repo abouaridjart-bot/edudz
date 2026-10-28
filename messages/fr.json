@@ -1,0 +1,53 @@
+{
+  "app": {
+    "name": "EduDZ",
+    "tagline": "La plateforme éducative algérienne et la gestion des centres de soutien scolaire",
+    "description": "Cours, exercices et annales selon le programme algérien, avec un système complet de gestion des centres de cours particuliers en présentiel."
+  },
+  "common": {
+    "comingSoon": "Bientôt",
+    "toggleTheme": "Basculer entre mode clair et sombre",
+    "switchTo": "العربية",
+    "skipToContent": "Aller au contenu",
+    "backHome": "Retour à l'accueil",
+    "errorTitle": "Une erreur inattendue est survenue",
+    "errorRetry": "Réessayer",
+    "notFoundTitle": "Page introuvable",
+    "notFoundText": "Le lien que vous cherchez n'existe pas ou a été déplacé."
+  },
+  "nav": {
+    "home": "Accueil",
+    "curriculum": "Programme",
+    "exams": "Annales d'examens",
+    "login": "Connexion",
+    "student": "Espace élève",
+    "center": "Gestion du centre",
+    "admin": "Administration"
+  },
+  "home": {
+    "heroTitle": "Apprenez selon le programme algérien et gérez votre centre de soutien au même endroit",
+    "heroText": "Une plateforme qui fonctionne directement dans le navigateur, pensée d'abord pour l'arabe et pour le mobile.",
+    "partATitle": "La plateforme éducative",
+    "partAText": "Cours, résumés, quiz à correction automatique et annales du certificat de fin de primaire, du BEM et du BAC.",
+    "partBTitle": "Gestion du centre de soutien",
+    "partBText": "Élèves, parents, enseignants, groupes, emplois du temps, présence, facturation, paie des enseignants et rapports.",
+    "cyclesTitle": "Les cycles scolaires",
+    "primary": "Primaire",
+    "primaryText": "5 ans · se termine par le certificat de fin de primaire",
+    "middle": "Moyen",
+    "middleText": "4 ans · se termine par le BEM",
+    "secondary": "Secondaire",
+    "secondaryText": "3 ans · se termine par le baccalauréat (BAC)"
+  },
+  "shell": {
+    "underConstruction": "En construction",
+    "authNotice": "L'authentification et les droits d'accès arrivent à la phase 2. Cette page est ouverte temporairement pour le développement uniquement.",
+    "studentTitle": "Espace élève",
+    "studentText": "Votre progression, emploi du temps, devoirs et résultats apparaîtront ici.",
+    "centerTitle": "Gestion du centre",
+    "centerText": "Le résumé du jour : séances, présence, paiements et impayés apparaîtront ici.",
+    "adminTitle": "Administration générale",
+    "adminText": "La gestion du programme, des contenus et des centres apparaîtra ici.",
+    "dashboard": "Tableau de bord"
+  }
+}

@@ -1,0 +1,31 @@
+import { getActor } from "@/lib/session";
+import { redirect } from "next/navigation";
+import { can } from "@/lib/permissions";
+import { db } from "@/lib/db";
+import { scopeWhere } from "@/lib/permissions";
+
+export default async function BranchesPage() {
+  const actor = await getActor();
+  if (!actor) redirect("/login");
+  if (!can(actor, "read", "branch", { centerId: actor.centerId })) redirect("/");
+
+  const branches = await db.branch.findMany({
+    where: scopeWhere(actor),
+    include: { rooms: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return (
+    <main className="p-6 space-y-4">
+      <h1 className="text-2xl font-bold">الفروع والقاعات</h1>
+      <ul className="space-y-2">
+        {branches.map((b) => (
+          <li key={b.id} className="border rounded p-3">
+            <div className="font-semibold">{b.name}</div>
+            <div className="text-sm text-muted-foreground">عدد القاعات: {b.rooms.length}</div>
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}
