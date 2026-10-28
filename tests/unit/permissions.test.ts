@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MATRIX, RESOURCES, ROLES, TenantError, allowedBranchIds, can, canList, canRole, requireCenterId, scopeWhere, type Actor } from "@/lib/permissions";
+import { MATRIX, RESOURCES, ROLES, TenantError, allowedBranchIds, branchWhere, can, canList, canRole, requireCenterId, scopeWhere, type Actor } from "@/lib/permissions";
 
 const owner: Actor = { id: "u-owner", role: "CENTER_OWNER", centerId: "c1" };
 const manager: Actor = { id: "u-mgr", role: "BRANCH_MANAGER", centerId: "c1", branchIds: ["b1"] };
@@ -111,5 +111,12 @@ describe("permissions", () => {
     expect(scopeWhere(manager)).toEqual({ centerId: "c1", branchId: { in: ["b1"] } });
     expect(scopeWhere({ ...secretary, branchIds: undefined })).toEqual({ centerId: "c1", branchId: { in: [] } });
     expect(() => requireCenterId(admin)).toThrow(TenantError);
+  });
+
+  it("branchWhere: جدول Branch يُفلتر بـ id لا branchId", () => {
+    expect(branchWhere(owner)).toEqual({ centerId: "c1" });
+    expect(branchWhere(manager)).toEqual({ centerId: "c1", id: { in: ["b1"] } });
+    expect(branchWhere(secretary)).toEqual({ centerId: "c1", id: { in: ["b1"] } });
+    expect(() => branchWhere(admin)).toThrow(TenantError);
   });
 });

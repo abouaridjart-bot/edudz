@@ -2,16 +2,15 @@ import { getActor } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { canList } from "@/lib/permissions";
 import { db } from "@/lib/db";
-import { allowedBranchIds, requireCenterId } from "@/lib/permissions";
+import { branchWhere } from "@/lib/permissions";
 
 export default async function BranchesPage() {
   const actor = await getActor();
   if (!actor) redirect("/login");
   if (!canList(actor, "read", "branch")) redirect("/");
 
-  const branchIds = allowedBranchIds(actor);
   const branches = await db.branch.findMany({
-    where: { centerId: requireCenterId(actor), ...(branchIds ? { id: { in: branchIds } } : {}) },
+    where: branchWhere(actor),
     include: { rooms: true },
     orderBy: { createdAt: "asc" },
   });

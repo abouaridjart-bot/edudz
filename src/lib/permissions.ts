@@ -200,3 +200,13 @@ function isBranchScoped(actor: Actor): boolean {
 export function allowedBranchIds(actor: Actor): string[] | undefined {
   return isBranchScoped(actor) ? [...(actor.branchIds ?? [])] : undefined;
 }
+
+/**
+ * شرط where لجدول `Branch` نفسه (لا يحمل عمود `branchId` بل مفتاحه `id`).
+ * لا تستخدم `scopeWhere` مع Branch — ينتج عنه `branchId` غير موجود.
+ */
+export function branchWhere(actor: Actor): { centerId: string; id?: { in: string[] } } {
+  const centerId = requireCenterId(actor);
+  const branchIds = allowedBranchIds(actor);
+  return branchIds ? { centerId, id: { in: branchIds } } : { centerId };
+}
