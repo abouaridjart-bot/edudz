@@ -1,4 +1,4 @@
-﻿import { getActor } from "@/lib/session";
+import { getActor } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { canList } from "@/lib/permissions";
 import { db } from "@/lib/db";
@@ -21,7 +21,7 @@ export default async function TeachersPage() {
 
   return (
     <main className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">Ø§Ù„Ø£Ø³Ø§ØªØ°Ø©</h1>
+      <h1 className="text-2xl font-bold">الأساتذة</h1>
       <ul className="space-y-2">
         {teachers.map((t) => (
           <li key={t.id} className="border rounded p-3">

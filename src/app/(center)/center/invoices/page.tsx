@@ -1,4 +1,4 @@
-﻿import { getActor } from "@/lib/session";
+import { getActor } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { canList } from "@/lib/permissions";
 import { db } from "@/lib/db";
@@ -22,13 +22,13 @@ export default async function InvoicesPage() {
 
   return (
     <main className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">Ø§Ù„ÙÙˆØ§ØªÙŠØ±</h1>
+      <h1 className="text-2xl font-bold">الفواتير</h1>
       <ul className="space-y-2">
         {invoices.map((inv) => (
           <li key={inv.id} className="border rounded p-3">
             <div className="font-semibold">{inv.enrollment.student.user?.fullName ?? "-"} - {inv.period}</div>
             <div className="text-sm text-muted-foreground">
-              Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ: {inv.total} Ø¯Ø¬ / Ù…Ø¯ÙÙˆØ¹: {inv.paid} Ø¯Ø¬ / Ø§Ù„Ø­Ø§Ù„Ø©: {inv.status}
+              الإجمالي: {inv.total} دج / مدفوع: {inv.paid} دج / الحالة: {inv.status}
             </div>
           </li>
         ))}

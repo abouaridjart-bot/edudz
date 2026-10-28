@@ -1,4 +1,4 @@
-﻿import { getActor } from "@/lib/session";
+import { getActor } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { canList } from "@/lib/permissions";
 import { db } from "@/lib/db";
@@ -22,7 +22,7 @@ export default async function SessionsPage() {
 
   return (
     <main className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">Ø§Ù„Ø¬Ø¯Ø§ÙˆÙ„ ÙˆØ§Ù„Ø­ØµØµ</h1>
+      <h1 className="text-2xl font-bold">الجداول والحصص</h1>
       <ul className="space-y-2">
         {sessions.map((s) => (
           <li key={s.id} className="border rounded p-3">
