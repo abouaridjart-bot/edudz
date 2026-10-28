@@ -33,6 +33,22 @@ describe("studentCreateSchema", () => {
     if (result.success) expect(result.data.phone).toBe("+213551234567");
   });
 
+  it("يقبل بريداً إلكترونياً صالحاً ويطبّعه إلى أحرف صغيرة", () => {
+    const result = studentCreateSchema.safeParse({ ...base, email: "  Student@Example.COM " });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.email).toBe("student@example.com");
+
+    const empty = studentCreateSchema.safeParse({ ...base, email: "" });
+    expect(empty.success).toBe(true);
+    if (empty.success) expect(empty.data.email).toBeUndefined();
+  });
+
+  it("يرفض بريداً إلكترونياً غير صالح برسالة عربية", () => {
+    const result = studentCreateSchema.safeParse({ ...base, email: "not-an-email" });
+    expect(result.success).toBe(false);
+    expect(firstMessage(result)).toContain("بريد إلكتروني");
+  });
+
   it("يرفض رقم هاتف غير صالح برسالة عربية", () => {
     const result = studentCreateSchema.safeParse({ ...base, phone: "12345" });
     expect(result.success).toBe(false);

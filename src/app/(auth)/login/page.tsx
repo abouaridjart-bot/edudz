@@ -13,9 +13,9 @@ function isRedirect(err: unknown): boolean {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; activated?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, activated } = await searchParams;
   const t = await getTranslations("auth");
   const app = await getTranslations("app");
 
@@ -46,6 +46,12 @@ export default async function LoginPage({
         <div className="panel p-6 shadow-md md:p-8">
           <h1 className="text-2xl font-extrabold tracking-tight">{t("loginTitle")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t("loginSubtitle")}</p>
+
+          {activated ? (
+            <div className="mt-4">
+              <Alert variant="success">تم تفعيل الحساب بنجاح. سجّل الدخول بكلمة المرور الجديدة.</Alert>
+            </div>
+          ) : null}
 
           {error ? (
             <div className="mt-4">

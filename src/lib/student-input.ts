@@ -44,6 +44,18 @@ const optionalBirthDate = z.preprocess(
 const optionalText = (max: number, message: string) =>
   z.preprocess(emptyToUndefined, z.string().trim().max(max, message).optional());
 
+/** بريد إلكتروني اختياري (مطلوب لتفعيل دخول الطالب لاحقاً). */
+const optionalEmail = z.preprocess(
+  emptyToUndefined,
+  z
+    .string({ invalid_type_error: "بريد إلكتروني غير صالح" })
+    .trim()
+    .toLowerCase()
+    .max(120, "البريد الإلكتروني طويل جداً")
+    .email("بريد إلكتروني غير صالح")
+    .optional(),
+);
+
 /** مدخلات إنشاء طالب جديد — تُستخدم في الخادم والعميل معاً (نقية بلا اعتماد على قاعدة البيانات). */
 export const studentCreateSchema = z.object({
   fullName: z
@@ -52,6 +64,7 @@ export const studentCreateSchema = z.object({
     .min(3, "الاسم الكامل مطلوب (3 أحرف على الأقل)")
     .max(100, "الاسم الكامل طويل جداً"),
   phone: optionalPhone,
+  email: optionalEmail,
   branchId: z.string({ required_error: "الفرع مطلوب" }).min(1, "الفرع مطلوب"),
   levelId: z.string({ required_error: "المستوى الدراسي مطلوب" }).min(1, "المستوى الدراسي مطلوب"),
   streamId: z.preprocess(emptyToUndefined, z.string().min(1).optional()),

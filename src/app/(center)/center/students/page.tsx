@@ -8,6 +8,7 @@ import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ToneBadge } from "@/components/ui/status-badge";
 import { StudentForm } from "./student-form";
+import { inviteStudentAccount } from "./actions";
 
 export default async function StudentsPage({
   searchParams,
@@ -18,6 +19,8 @@ export default async function StudentsPage({
   const actor = await getActor();
   if (!actor) redirect("/login");
   if (!canList(actor, "read", "student")) redirect("/");
+
+  const canInvite = canList(actor, "create", "user");
 
   const [students, branches, levels, streams] = await Promise.all([
     db.student.findMany({
@@ -84,11 +87,28 @@ export default async function StudentsPage({
                       {s.stream ? ` · ${s.stream.nameAr}` : ""}
                       {s.user?.phone ? ` · ${s.user.phone}` : ""}
                     </p>
+                    {s.user?.email ? (
+                      <p className="truncate text-xs text-muted-foreground" dir="ltr">
+                        {s.user.email}
+                      </p>
+                    ) : null}
                   </div>
                   {s.user ? (
                     <ToneBadge tone={s.user.isActive ? "success" : "warning"}>
                       {s.user.isActive ? "حساب مفعّل" : "بانتظار التفعيل"}
                     </ToneBadge>
+                  ) : null}
+                  {canInvite && s.user && !s.user.isActive ? (
+                    s.user.email ? (
+                      <form action={inviteStudentAccount}>
+                        <input type="hidden" name="studentId" value={s.id} />
+                        <button className="inline-flex min-h-9 items-center rounded-lg border px-3 text-sm font-medium transition-colors hover:bg-muted">
+                          رابط تفعيل
+                        </button>
+                      </form>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">أضف بريداً إلكترونياً للتفعيل</span>
+                    )
                   ) : null}
                 </li>
               );

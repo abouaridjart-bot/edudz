@@ -62,6 +62,21 @@ export function StudentForm({
         </label>
 
         <label className="space-y-1.5">
+          <span className="field-label">
+            البريد الإلكتروني <span className="text-muted-foreground">(للتفعيل)</span>
+          </span>
+          <input
+            name="email"
+            type="email"
+            inputMode="email"
+            dir="ltr"
+            placeholder="student@example.com"
+            autoComplete="off"
+            className="field-input"
+          />
+        </label>
+
+        <label className="space-y-1.5">
           <span className="field-label">الفرع</span>
           <select name="branchId" required defaultValue={branches[0].id} className="field-input">
             {branches.map((b) => (
@@ -136,7 +151,7 @@ export function StudentForm({
           إضافة الطالب
         </button>
         <span className="text-xs text-muted-foreground">
-          يُنشأ حساب الطالب غير مفعّل؛ يفعّله المسؤول لاحقاً قبل السماح له بالدخول.
+          يُنشأ حساب الطالب غير مفعّل؛ أضف بريداً إلكترونياً ثم أنشئ رابط تفعيل من القائمة ليتمكن من الدخول.
         </span>
       </div>
     </form>
