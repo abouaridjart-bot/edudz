@@ -26,6 +26,8 @@ describe("permissions", () => {
     expect(can(manager, "update", "student", { centerId: "c1", branchId: "b1" })).toBe(true);
     expect(can(manager, "update", "student", { centerId: "c1", branchId: "b2" })).toBe(false);
     expect(can(manager, "update", "student", { centerId: "c2", branchId: "b1" })).toBe(false);
+    expect(can(manager, "create", "payment", { centerId: "c1", branchId: "b1" })).toBe(true);
+    expect(can(manager, "create", "payment", { centerId: "c1", branchId: "b2" })).toBe(false);
     expect(can(manager, "read", "student", { centerId: "c1" })).toBe(false);
   });
 

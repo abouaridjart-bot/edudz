@@ -30,3 +30,24 @@ export function isValidGrade(g: number): boolean {
   if (g < 0 || g > 20) return false;
   return (Math.round(g * 4) / 4) === g || Math.abs(g * 4 - Math.round(g * 4)) < 1e-9;
 }
+
+export interface PaymentApplication {
+  paid: number;
+  status: "PARTIAL" | "PAID";
+}
+
+/**
+ * يحسب حالة الفاتورة بعد دفعة. كل المبالغ أعداد صحيحة بالدينار.
+ * يرمي RangeError عند مبلغ غير صالح أو يتجاوز المتبقي (لا سماح بالدفع الزائد).
+ */
+export function applyPaymentToInvoice(invoice: { total: number; paid: number }, amount: number): PaymentApplication {
+  if (!Number.isSafeInteger(invoice.total) || !Number.isSafeInteger(invoice.paid)) {
+    throw new RangeError("invoice amounts must be safe integers");
+  }
+  if (invoice.total < 0 || invoice.paid < 0) throw new RangeError("invoice amounts must be >= 0");
+  if (invoice.paid > invoice.total) throw new RangeError("paid exceeds total");
+  if (!Number.isSafeInteger(amount) || amount <= 0) throw new RangeError("amount must be a positive integer of dinars");
+  if (amount > invoice.total - invoice.paid) throw new RangeError("amount exceeds remaining balance");
+  const paid = invoice.paid + amount;
+  return { paid, status: paid >= invoice.total ? "PAID" : "PARTIAL" };
+}
