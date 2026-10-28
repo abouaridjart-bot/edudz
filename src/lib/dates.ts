@@ -100,6 +100,22 @@ export function formatPeriod(period: string, locale: "ar" | "fr" = "ar", style: 
   return `${monthName(month, locale, style)} ${m[1]}`;
 }
 
+/**
+ * حدود شهر الفاتورة "YYYY-MM" كتواريخ UTC (لأعمدة `@db.Date`):
+ * `start` أول يوم، `end` آخر يوم. يعيد null لصيغة غير صالحة.
+ */
+export function periodBounds(period: string): { start: Date; end: Date } | null {
+  const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(period);
+  if (!m) return null;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  if (year < 1900 || year > 2200) return null;
+  return {
+    start: new Date(Date.UTC(year, month - 1, 1)),
+    end: new Date(Date.UTC(year, month, 0)),
+  };
+}
+
 /** "27 أكتوبر 2026" */
 export function formatDateLong(date: Date, locale: "ar" | "fr" = "ar", style: MonthStyle = "dz"): string {
   const p = algiersParts(date);

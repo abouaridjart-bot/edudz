@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   academicYearLabel, algiersParts, formatDate, formatDateLong, formatDateTime, formatHHMM, formatPeriod, isValidRange,
-  monthName, parseHHMM, rangesOverlap, startOfMonthInAlgiers, todayInAlgiers, weekdayName,
+  monthName, parseHHMM, periodBounds, rangesOverlap, startOfMonthInAlgiers, todayInAlgiers, weekdayName,
 } from "@/lib/dates";
 
 describe("dates (Africa/Algiers)", () => {
@@ -76,5 +76,18 @@ describe("dates (Africa/Algiers)", () => {
     expect(monthStart.toISOString()).toBe(
       `${p.year}-${String(p.month).padStart(2, "0")}-01T00:00:00.000Z`,
     );
+  });
+
+  it("حدود شهر الفاتورة", () => {
+    expect(periodBounds("2026-10")).toEqual({
+      start: new Date("2026-10-01T00:00:00.000Z"),
+      end: new Date("2026-10-31T00:00:00.000Z"),
+    });
+    expect(periodBounds("2028-02")?.end.toISOString()).toBe("2028-02-29T00:00:00.000Z"); // سنة كبيسة
+    expect(periodBounds("2026-12")?.end.toISOString()).toBe("2026-12-31T00:00:00.000Z");
+    expect(periodBounds("2026-13")).toBeNull();
+    expect(periodBounds("2026-00")).toBeNull();
+    expect(periodBounds("26-10")).toBeNull();
+    expect(periodBounds("bad")).toBeNull();
   });
 });
