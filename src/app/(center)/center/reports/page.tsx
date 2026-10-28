@@ -1,46 +1,76 @@
 import { redirect } from "next/navigation";
-import { BarChart3, CalendarCheck2, CircleDollarSign, TriangleAlert, UsersRound } from "lucide-react";
-import { canList } from "@/lib/permissions";
+import { Calculator, TrendingDown, TrendingUp } from "lucide-react";
+import { canList, allowedBranchIds, requireCenterId } from "@/lib/permissions";
+import { db } from "@/lib/db";
 import { getActor } from "@/lib/session";
 import { PageHeader } from "@/components/ui/page-header";
-import { ToneBadge } from "@/components/ui/status-badge";
+import { Alert } from "@/components/ui/alert";
+import { ExpenseForm } from "./expense-form";
 
-const REPORTS = [
-  { title: "الإيرادات", text: "التحصيل الشهري حسب الفرع وطريقة الدفع.", icon: CircleDollarSign },
-  { title: "المتأخرات", text: "الفواتير غير المسددة وأعمار الدين.", icon: TriangleAlert },
-  { title: "الحضور", text: "نسب الحضور والغياب لكل فوج وطالب.", icon: CalendarCheck2 },
-  { title: "امتلاء الأفواج", text: "المقاعد المتاحة ونسب الاستغلال.", icon: UsersRound },
-] as const;
-
-export default async function ReportsPage() {
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ok?: string; error?: string }>;
+}) {
+  const { ok, error } = await searchParams;
   const actor = await getActor();
   if (!actor) redirect("/login");
-  if (!canList(actor, "read", "report")) redirect("/");
+  if (!canList(actor, "read", "expense")) redirect("/");
+
+  const branchIds = allowedBranchIds(actor);
+  const branches = await db.branch.findMany({
+    where: branchIds ? { id: { in: branchIds } } : {},
+    select: { id: true, name: true },
+  });
+
+  const categories = [
+    "رواتب",
+    "إيجار",
+    "كهرباء ومياه",
+    "إنترنت",
+    "مواد تعليمية",
+    "صيانة",
+    "نقل",
+    "أخرى",
+  ];
 
   return (
     <div className="space-y-6">
-      <PageHeader title="التقارير" description="تقارير تشغيلية ومالية للمركز. التقارير التفصيلية قيد الإنشاء." />
+      <PageHeader
+        title="التقارير المالية"
+        description="إدارة المصاريف وصرف الأجور وتتبع المركز المالي."
+      />
 
-      <ul className="grid gap-3 sm:grid-cols-2">
-        {REPORTS.map(({ title, text, icon: Icon }) => (
-          <li key={title} className="panel flex items-start gap-3 p-4">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Icon className="size-5" aria-hidden />
-            </span>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="font-semibold">{title}</p>
-                <ToneBadge tone="neutral">قريباً</ToneBadge>
+      {ok ? <Alert variant="success">{ok}</Alert> : null}
+      {error ? <Alert variant="error">{error}</Alert> : null}
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <ExpenseForm branches={branches} categories={categories} />
+        </div>
+
+        <div className="space-y-4">
+          <div className="panel p-4">
+            <h3 className="mb-4 font-semibold">ملخص المركز</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">إجمالي المصاريف (هذا الشهر)</span>
+                <span className="font-mono font-semibold text-danger">—</span>
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">{text}</p>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">إجمالي الأجور (هذا الشهر)</span>
+                <span className="font-mono font-semibold text-primary">—</span>
+              </div>
             </div>
-          </li>
-        ))}
-      </ul>
+          </div>
 
-      <div className="panel flex items-center gap-3 p-4 text-sm text-muted-foreground">
-        <BarChart3 className="size-5 shrink-0 text-primary" aria-hidden />
-        تُبنى التقارير على بيانات الفواتير والدفعات والحضور المسجلة فعلياً، دون أي أرقام تقديرية.
+          <div className="panel p-4">
+            <h3 className="mb-4 font-semibold">معلومات</h3>
+            <p className="text-sm text-muted-foreground">
+              هذه الشاشة للإدارة المالية الأساسية. يمكن تسجيل المصاريف وإدارة الأجور.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

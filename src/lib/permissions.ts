@@ -59,7 +59,9 @@ export const MATRIX: Matrix = {
     attendance: { actions: RU, scope: "branch" },
     invoice: { actions: RCU, scope: "branch" },
     payment: { actions: RCU, scope: "branch" },
-    report: { actions: R, scope: "branch" },
+    payout: { actions: ALL, scope: "center" },
+    expense: { actions: ALL, scope: "center" },
+    report: { actions: R, scope: "center" },
   },
   SECRETARY: {
     room: { actions: R, scope: "branch" },
