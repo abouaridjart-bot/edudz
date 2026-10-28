@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { ClipboardCheck } from "lucide-react";
+import Link from "next/link";
 import { canList, allowedBranchIds, requireCenterId } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { getActor } from "@/lib/session";
@@ -50,28 +51,30 @@ export default async function AttendancePage() {
             const absent = s.attendance.filter((a) => a.status === "ABSENT").length;
             return (
               <li key={s.id} className="panel flex flex-wrap items-center justify-between gap-3 p-4">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">
-                    {s.group.name} · <span className="ltr-isolate">{formatDate(s.date)}</span>
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    <span className="ltr-isolate">
-                      {s.startTime}–{s.endTime}
-                    </span>{" "}
-                    · {s.room.name} · {s.teacher.user.fullName}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {s.attendance.length > 0 ? (
-                    <>
-                      <ToneBadge tone="success">حاضر {present}</ToneBadge>
-                      <ToneBadge tone="danger">غائب {absent}</ToneBadge>
-                    </>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">لم يُسجَّل بعد</span>
-                  )}
-                  <StatusBadge status={sessionStatus(s.status)} />
-                </div>
+                <Link href={`/center/sessions/${s.id}`} className="block w-full">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">
+                      {s.group.name} · <span className="ltr-isolate">{formatDate(s.date)}</span>
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      <span className="ltr-isolate">
+                        {s.startTime}–{s.endTime}
+                      </span>{" "}
+                      · {s.room.name} · {s.teacher.user.fullName}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {s.attendance.length > 0 ? (
+                      <>
+                        <ToneBadge tone="success">حاضر {present}</ToneBadge>
+                        <ToneBadge tone="danger">غائب {absent}</ToneBadge>
+                      </>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">لم يُسجَّل بعد</span>
+                    )}
+                    <StatusBadge status={sessionStatus(s.status)} />
+                  </div>
+                </Link>
               </li>
             );
           })}

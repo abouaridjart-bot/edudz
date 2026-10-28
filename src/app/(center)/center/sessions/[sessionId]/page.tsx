@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import { redirect } from "next/navigation";
 import { ClipboardCheck, Users, Check } from "lucide-react";
 import { can, canList, allowedBranchIds, requireCenterId } from "@/lib/permissions";
@@ -63,9 +60,7 @@ export default async function SessionDetailPage({
     <div className="space-y-6">
       <PageHeader
         title="تفاصيل الحصة"
-        description={
-          <>جلسة {session.group.name} · {formatDate(session.date)} · {session.startTime}–{session.endTime}</>
-        }
+        description={`جلسة ${session.group.name} · ${formatDate(session.date)} · ${session.startTime}–${session.endTime}`}
       />
 
       <div className="panel p-4">
