@@ -3,8 +3,35 @@ import { getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getActor } from "@/lib/session";
+import type { Actor } from "@/lib/permissions";
+
+function homeForRole(role: Actor["role"]): string {
+  switch (role) {
+    case "CENTER_OWNER":
+    case "BRANCH_MANAGER":
+    case "SECRETARY":
+      return "/center";
+    case "TEACHER":
+      return "/teacher/dashboard";
+    case "STUDENT":
+      return "/student/dashboard";
+    case "PARENT":
+      return "/parent/dashboard";
+    case "SUPER_ADMIN":
+      return "/admin";
+    default:
+      return "/login";
+  }
+}
 
 export default async function PublicPage() {
+  // المستخدم المسجّل لا يرى صفحة الهبوط: يُعاد توجيهه إلى مساره حسب دوره
+  // (مركز / أستاذ / تلميذ / ولي / إدارة المنصة). الزائر غير المسجّل يرى الهبوط.
+  const actor = await getActor();
+  if (actor) redirect(homeForRole(actor.role));
+
   const t = await getTranslations("home");
   const common = await getTranslations("common");
 

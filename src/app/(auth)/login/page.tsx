@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { GraduationCap } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { getEnv } from "@/lib/env";
+import { signIn } from "@/lib/auth";
+import { SubmitButton } from "@/app/(auth)/login/submit-button";
 
 function isRedirect(err: unknown): boolean {
   const digest = (err as { digest?: unknown } | null)?.digest;
@@ -13,29 +14,11 @@ async function loginAction(formData: FormData) {
   "use server";
   const identifier = String(formData.get("identifier") ?? "");
   const password = String(formData.get("password") ?? "");
-  
+
   try {
-    // استدعاء API route مباشرة بدلاً من signIn
-    const response = await fetch(`${getEnv().NEXT_PUBLIC_APP_URL}/api/auth/callback/credentials`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        identifier,
-        password,
-        callbackUrl: getEnv().NEXT_PUBLIC_APP_URL + "/",
-        json: "true"
-      }),
-    });
-
-    const data = await response.json();
-    
-    if (!response.ok || data.error) {
-      redirect("/login?error=1");
-    }
-
-    redirect("/");
+    // النمط الرسمي في Auth.js v5: عند النجاح يرمي NEXT_REDIRECT نعيد رميه،
+    // وعند فشل بيانات الدخول يرمي CredentialsSignin فنعيد التوجيه للخطأ.
+    await signIn("credentials", { identifier, password, redirectTo: "/" });
   } catch (err) {
     if (isRedirect(err)) throw err;
     redirect("/login?error=1");
@@ -114,12 +97,7 @@ export default async function LoginPage({
                 />
               </div>
 
-              <button
-                type="submit"
-                className="group relative w-full h-12 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200/50 active:scale-[0.98] transition-all"
-              >
-                <span>{t("signIn")}</span>
-              </button>
+              <SubmitButton>{t("signIn")}</SubmitButton>
             </form>
 
             <div className="mt-8 pt-6 border-t border-indigo-50 flex flex-col items-center gap-4 text-xs font-medium text-indigo-950/50 text-center">
