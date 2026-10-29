@@ -203,6 +203,7 @@
 - المسار الواحد `/`: الزائر يرى صفحة الهبوط في `(public)/page.tsx`، والمسجّل يُعاد توجيهه حسب دوره من نفس الصفحة (لا صفحة `src/app/page.tsx` مستقلة — تسبب تعارض مسارين لنفس المورد).
 - `loginAction` يعتمد `signIn` من `"@/lib/auth"` مباشرة داخل Server Action (النمط الرسمي Auth.js v5)؛ لا نداء داخلي لـ`/api/auth/*` عبر `fetch` من الخادم (يفشل بـ MissingCSRF لأن csrf cookie غير متاح للنداء الداخلي).
 - زر «دخول» هو مكوّن عميل `SubmitButton` يستخدم `useFormStatus` لحالة الانتظار؛ ليست هنالك أيقونة حساب في صفحة الدخول نفسها (أيقونة `UserCircle`/`circle-user` في شريط التطبيق داخل `(center)` عبر `UserMenu`).
+- المستودع مرفوع على GitHub خاص (`origin` = `abouaridjart-bot/edudz`، فرع `master` مع تتبّع)؛ **المستخدم أجّل تدوير كلمة سر Neon** (2026-10-30) — الخطر منخفض لأنها بيئة تطوير ببيانات تجريبية، ورابط الاتصال غير مصعّد أساساً (المتتبَّع `.env.example` بنماذج فقط).
 
 ## متغيرات البيئة (أسماء فقط)
 `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `NEXT_PUBLIC_APP_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `DEMO_PASSWORD` (اختياري)
@@ -219,7 +220,7 @@
 9. ✅ تم: إدخال الأجور والمصاريف (Server Action + قواعد الصرف) مع تحقق فعلي.
 10. ✅ تم: التقارير المالية والإحصائيات مع تحقق فعلي.
 11. ✅ تم: تحسينات الواجهة والاختبارات النهائية + توحيد المسار `/` + إصلاح `loginAction` (2026-10-30).
-12. المتبقي: تدوير كلمة سر Neon · فحص RTL على 360px يدوياً · تحسينات UX تكميلية (انظر `docs/06_REMAINING_PHASES.md`).
+12. ✅ 2026-10-30: ربط مستودع GitHub خاص (origin = `abouaridjart-bot/edudz`) ورفع `master` (الـ HEAD مطابق `57ec458`)؛ المتتبَّع `.env.example` فقط ولا `.env`/`.env.local` (السرّ غير مصعّد). المتبقي: فحص RTL على 360px يدوياً · تحسينات UX تكميلية (انظر `docs/06_REMAINING_PHASES.md`).
 8. المتبقي بالتوازي: فحص RTL على عرض 360px يدوياً (المتصفح هنا لا ينزل تحت 800px؛ تم التحقق من 800px + Lighthouse mobile + قواعد CSS) — انظر `docs/06_REMAINING_PHASES.md`.
 
 ## مشاكل معروفة / TODO
