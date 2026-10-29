@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { GraduationCap } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { signIn } from "@/lib/auth";
+import { getEnv } from "@/lib/env";
 
 function isRedirect(err: unknown): boolean {
   const digest = (err as { digest?: unknown } | null)?.digest;
@@ -13,8 +13,29 @@ async function loginAction(formData: FormData) {
   "use server";
   const identifier = String(formData.get("identifier") ?? "");
   const password = String(formData.get("password") ?? "");
+  
   try {
-    await signIn("credentials", { identifier, password, redirectTo: "/", redirect: false });
+    // استدعاء API route مباشرة بدلاً من signIn
+    const response = await fetch(`${getEnv().NEXT_PUBLIC_APP_URL}/api/auth/callback/credentials`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        identifier,
+        password,
+        callbackUrl: getEnv().NEXT_PUBLIC_APP_URL + "/",
+        json: "true"
+      }),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok || data.error) {
+      redirect("/login?error=1");
+    }
+
+    redirect("/");
   } catch (err) {
     if (isRedirect(err)) throw err;
     redirect("/login?error=1");
