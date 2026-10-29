@@ -2,8 +2,9 @@ import { BookOpenCheck, School } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 
-export default async function HomePage() {
+export default async function PublicPage() {
   const t = await getTranslations("home");
   const common = await getTranslations("common");
 
@@ -19,6 +20,14 @@ export default async function HomePage() {
         <div className="container py-14 md:py-20">
           <h1 className="max-w-3xl text-3xl font-extrabold leading-[1.4] md:text-5xl md:leading-[1.35]">{t("heroTitle")}</h1>
           <p className="mt-5 max-w-2xl text-lg text-muted-foreground">{t("heroText")}</p>
+          <div className="mt-8 flex gap-4">
+            <Link
+              href="/login"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-8 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              تسجيل الدخول
+            </Link>
+          </div>
         </div>
       </section>
 
