@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { GraduationCap } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
+import { FlashToaster } from "@/components/flash-toaster";
 import { auth } from "@/lib/auth";
 import { NavLink, type NavIcon } from "./nav-link";
 import { ToolbarControls } from "./toolbar-controls";
@@ -36,6 +38,9 @@ export async function AppShell({ title, nav, children }: { title: string; nav: S
 
   return (
     <div className="min-h-dvh bg-muted/30">
+      <Suspense fallback={null}>
+        <FlashToaster />
+      </Suspense>
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className="container flex h-16 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">

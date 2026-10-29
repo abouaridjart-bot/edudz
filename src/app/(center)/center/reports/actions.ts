@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { getActor } from "@/lib/session";
 import { ActionError } from "@/lib/action";
 import { requireCenterId, can } from "@/lib/permissions";
+import { setFlash } from "@/lib/flash";
 
 const expenseSchema = z.object({
   branchId: z.string().trim().min(1, "اختر الفرع"),
@@ -54,5 +55,6 @@ export async function createExpense(formData: FormData): Promise<void> {
   });
 
   revalidatePath("/center/reports"); // التقارير المالية تتأثر بالمصاريف
-  redirect("/center/reports?ok=" + encodeURIComponent("تم تسجيل المصروف بنجاح"));
+  setFlash("success", "تم تسجيل المصروف بنجاح");
+  redirect("/center/reports");
 }

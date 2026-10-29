@@ -1,18 +1,19 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { Prisma } from "@prisma/client";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { ActionError, withAction } from "@/lib/action";
 import { db } from "@/lib/db";
 import { createInvitation } from "@/lib/invitations";
 import { hashPassword } from "@/lib/password";
 import { requireCenterId } from "@/lib/permissions";
 import { studentCreateSchema, type StudentCreateInput } from "@/lib/student-input";
+import { randomBytes } from "node:crypto";
+import { setFlash } from "@/lib/flash";
 
-/** مركز الفرع يُقرأ من قاعدة البيانات لا من النموذج؛ أي فرع غير موجود = رفض. */
+/** centered branch is read from DB not from form; non-existent branch = reject. */
 async function getBranchTarget(input: StudentCreateInput) {
   const branch = await db.branch.findUnique({
     where: { id: input.branchId },
@@ -60,7 +61,7 @@ export async function createStudent(formData: FormData): Promise<void> {
         }
       }
 
-      // كلمة مرور عشوائية غير معروفة + حساب غير مفعّل: يبقى الطالب بلا دخول حتى تُفعَّل الدعوة/كلمة المرور.
+      // Random password + inactive account: student cannot login until password/activation.
       const passwordHash = await hashPassword(randomBytes(24).toString("hex"));
 
       if (input.email) {
@@ -107,11 +108,14 @@ export async function createStudent(formData: FormData): Promise<void> {
   });
 
   if (!result.ok) {
-    redirect(`/center/students?error=${encodeURIComponent(result.error)}`);
+    setFlash("error", result.error ?? "حدث خطأ غير معروف");
+    redirect("/center/students");
   }
 
   revalidatePath("/center/students");
-  redirect(`/center/students?ok=${encodeURIComponent("تمت إضافة الطالب بنجاح")}`);
+  setFlash("success", "تمت إضافة الطالب بنجاح");
+  revalidatePath("/center/students");
+  redirect("/center/students");
 }
 
 const inviteSchema = z.object({ studentId: z.string().trim().min(1, "اختر الطالب") });
@@ -119,8 +123,9 @@ const inviteSchema = z.object({ studentId: z.string().trim().min(1, "اختر ا
 type InviteInput = z.infer<typeof inviteSchema>;
 
 /**
- * إنشاء (أو إعادة استخدام) دعوة تفعيل حساب طالب. لا يُرسَل بريد فعلي بعد؛
- * يُعرض رابط التفعيل في صفحة الدعوات ليرسله المسؤول للطالب.
+ * Creating (or reusing) a Student account activation invitation.
+ * No email is sent automatically; the activation link is displayed on the
+ * invitations page for the admin to copy and send to the student.
  */
 export async function inviteStudentAccount(formData: FormData): Promise<void> {
   const result = await withAction<unknown, InviteInput, { token: string; studentName: string; reused: boolean }>({
@@ -147,9 +152,9 @@ export async function inviteStudentAccount(formData: FormData): Promise<void> {
         select: { id: true, userId: true, user: { select: { email: true, fullName: true, isActive: true } } },
       });
       if (!student || !student.user) throw new ActionError("الطالب غير موجود");
-      if (student.user.isActive) throw new ActionError("حساب الطالب مفعّل بالفعل");
+      if (student.user.isActive) throw new ActionError("حساب الطالب مفعَّل بالفعل");
       if (!student.user.email) {
-        throw new ActionError("أضف بريداً إلكترونياً للطالب أولاً (لا يمكن تعديله بعد الإنشاء حالياً)");
+        throw new ActionError("أضف بريداً إلكترونياً للطالب firstly (لا يمكن تعديله بعد الإنشاء حالياً)");
       }
 
       const pending = await db.invitation.findFirst({
@@ -178,13 +183,17 @@ export async function inviteStudentAccount(formData: FormData): Promise<void> {
   });
 
   if (!result.ok) {
-    redirect(`/center/students?error=${encodeURIComponent(result.error)}`);
+    setFlash("error", result.error ?? "حدث خطأ غير معروف");
+    redirect("/center/students");
   }
 
   revalidatePath("/center/students");
   revalidatePath("/center/invitations");
   const message = result.data.reused
     ? `دعوة ${result.data.studentName} موجودة وسارية؛ الرابط في صفحة الدعوات`
-    : `أُنشئ رابط تفعيل ${result.data.studentName}؛ انسخه من صفحة الدعوات`;
-  redirect(`/center/invitations?ok=${encodeURIComponent(message)}`);
+    : `أُنشأ رابط تفعيل ${result.data.studentName}; انسخه من صفحة الدعوات`;
+  setFlash("success", message);
+  revalidatePath("/center/students");
+  revalidatePath("/center/invitations");
+  redirect("/center/students");
 }

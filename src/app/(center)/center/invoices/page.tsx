@@ -6,19 +6,13 @@ import { algiersParts, formatPeriod } from "@/lib/dates";
 import { allowedBranchIds, branchWhere, canList, requireCenterId } from "@/lib/permissions";
 import { getActor } from "@/lib/session";
 import { PageHeader } from "@/components/ui/page-header";
-import { Alert } from "@/components/ui/alert";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { invoiceStatus } from "@/lib/labels";
 import { generateInvoices } from "./actions";
 
-export default async function InvoicesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
-}) {
-  const { ok, error } = await searchParams;
+export default async function InvoicesPage() {
   const actor = await getActor();
   if (!actor) redirect("/login");
   if (!canList(actor, "read", "invoice")) redirect("/");
@@ -58,9 +52,6 @@ export default async function InvoicesPage({
         title="الفواتير"
         description="فواتير الاشتراكات الشهرية للطلاب مع حالة السداد والمتبقي."
       />
-
-      {ok ? <Alert variant="success">{ok}</Alert> : null}
-      {error ? <Alert variant="error">{error}</Alert> : null}
 
       {canGenerate && branches.length > 0 ? (
         <section className="panel panel-body space-y-3">

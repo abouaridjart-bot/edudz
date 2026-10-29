@@ -18,12 +18,7 @@ function inviteState(invite: { acceptedAt: Date | null; expiresAt: Date }) {
   return { label: "نشطة", tone: "info" as const };
 }
 
-export default async function CenterInvitationsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
-}) {
-  const { ok, error } = await searchParams;
+export default async function CenterInvitationsPage() {
   const actor = await getActor();
   if (!actor) redirect("/login");
   if (!canList(actor, "create", "user")) redirect("/");
@@ -43,9 +38,6 @@ export default async function CenterInvitationsPage({
         title="الدعوات"
         description="روابط تفعيل حسابات الطلاب والأولياء والأساتذة. أرسل الرابط للشخص المعني ليختار كلمة مروره بنفسه."
       />
-
-      {ok ? <Alert variant="success">{ok}</Alert> : null}
-      {error ? <Alert variant="error">{error}</Alert> : null}
 
       <Alert variant="info">
         لا يوجد إرسال بريد تلقائي بعد: انسخ رابط التفعيل وأرسله للشخص (واتساب، بريد، أو رسالة). الرابط صالح 72 ساعة ولمرة واحدة.

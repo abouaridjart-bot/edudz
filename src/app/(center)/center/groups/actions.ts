@@ -2,36 +2,26 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { Prisma } from "@prisma/client";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { ActionError, withAction } from "@/lib/action";
 import { db } from "@/lib/db";
 import { todayInAlgiers } from "@/lib/dates";
 import { checkEnrollment, type EnrollmentBlockReason } from "@/lib/enrollment";
 import { requireCenterId } from "@/lib/permissions";
-
-const schema = z.object({
-  groupId: z.string().trim().min(1, "اختر الفوج"),
-  studentId: z.string().trim().min(1, "اختر الطالب"),
-});
-
-type EnrollInput = z.infer<typeof schema>;
+import { setFlash } from "@/lib/flash";
 
 const BLOCK_MESSAGES: Record<EnrollmentBlockReason, string> = {
   invalid: "بيانات الفوج غير صالحة",
   "group-not-active": "لا يمكن التسجيل في فوج موقوف أو مغلق",
-  "already-enrolled": "الطالب مسجّل بالفعل في هذا الفوج",
+  "already-enrolled": "الطالب مسجَّل بالفعل في هذا الفوج",
   full: "الفوج ممتلئ، لا توجد مقاعد متاحة",
 };
 
-/**
- * تسجيل طالب في فوج: تحقق من الصلاحية والمركز والفرع، ثم فحص التكرار والسعة
- * داخل معاملة Serializable حتى لا يتجاوز تسجيلان متزامنان سعة الفوج.
- */
 export async function enrollStudent(formData: FormData): Promise<void> {
-  const result = await withAction<unknown, EnrollInput, { enrollmentId: string; studentName: string; groupName: string }>({
+  const result = await withAction<unknown, { groupId: string; studentId: string }, { enrollmentId: string; studentName: string; groupName: string }>({
     input: { groupId: formData.get("groupId"), studentId: formData.get("studentId") },
-    schema,
+    schema: z.object({ groupId: z.string().trim().min(1, "اختر الفوج"), studentId: z.string().trim().min(1, "اختر الطالب") }),
     resource: "enrollment",
     action: "create",
     getTarget: async (input) => {
@@ -39,7 +29,6 @@ export async function enrollStudent(formData: FormData): Promise<void> {
         where: { id: input.groupId },
         select: { centerId: true, branchId: true },
       });
-      // فرع الفوج يحدد النطاق الذي تُفحص فيه صلاحية مدير الفرع/السكرتير.
       return group ? { centerId: group.centerId, branchId: group.branchId } : {};
     },
     audit: {
@@ -114,10 +103,13 @@ export async function enrollStudent(formData: FormData): Promise<void> {
   });
 
   if (!result.ok) {
-    redirect(`/center/groups?error=${encodeURIComponent(result.error)}`);
+    setFlash("error", result.error ?? "حدث خطأ غير معروف");
+    redirect("/center/groups");
   }
 
   revalidatePath("/center/groups");
   const message = `تم تسجيل ${result.data.studentName} في ${result.data.groupName}`;
-  redirect(`/center/groups?ok=${encodeURIComponent(message)}`);
+  setFlash("success", message);
+  revalidatePath("/center/groups");
+  redirect("/center/groups");
 }

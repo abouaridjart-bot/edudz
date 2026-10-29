@@ -2,13 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { Prisma } from "@prisma/client";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { ActionError, withAction } from "@/lib/action";
 import { applyPaymentToInvoice } from "@/lib/billing";
 import { db } from "@/lib/db";
 import { parseDinars } from "@/lib/money";
 import { nextReceiptNo } from "@/lib/receipts";
+import { setFlash } from "@/lib/flash";
 
 const PAYMENT_METHODS = ["CASH", "CCP", "BARIDIMOB", "BANK", "OTHER"] as const;
 
@@ -129,10 +130,12 @@ export async function recordPayment(formData: FormData): Promise<void> {
   });
 
   if (!result.ok) {
-    redirect(`/center/payments?error=${encodeURIComponent(result.error)}`);
+    setFlash("error", result.error ?? "حدث خطأ غير معروف");
+    redirect("/center/payments");
   }
 
+  setFlash("success", `تم تسجيل الدفعة بنجاح — رقم الإيصال: ${result.data.receiptNo}`);
   revalidatePath("/center/payments");
   revalidatePath("/center/invoices");
-  redirect(`/center/payments?ok=${encodeURIComponent(result.data.receiptNo)}`);
+  redirect("/center/payments");
 }

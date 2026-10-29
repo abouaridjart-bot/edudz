@@ -4,18 +4,12 @@ import { canList, scopeWhere } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { getActor } from "@/lib/session";
 import { PageHeader } from "@/components/ui/page-header";
-import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge, ToneBadge } from "@/components/ui/status-badge";
 import { groupStatus } from "@/lib/labels";
 import { enrollStudent } from "./actions";
 
-export default async function GroupsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
-}) {
-  const { ok, error } = await searchParams;
+export default async function GroupsPage() {
   const actor = await getActor();
   if (!actor) redirect("/login");
   if (!canList(actor, "read", "group")) redirect("/");
@@ -52,9 +46,6 @@ export default async function GroupsPage({
         title="الأفواج"
         description="الأفواج الدراسية، أساتذتها، ونسبة امتلاء كل فوج مع تسجيل الطلاب."
       />
-
-      {ok ? <Alert variant="success">{ok}</Alert> : null}
-      {error ? <Alert variant="error">{error}</Alert> : null}
 
       {groups.length === 0 ? (
         <EmptyState icon={UsersRound} title="لا توجد أفواج" description="أنشئ فوجاً أولاً ثم أضف إليه الطلاب." />

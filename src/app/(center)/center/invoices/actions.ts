@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { computeInvoiceAmount } from "@/lib/billing";
 import { periodBounds } from "@/lib/dates";
 import { requireCenterId } from "@/lib/permissions";
+import { setFlash } from "@/lib/flash";
 
 const schema = z.object({
   period: z.string().trim().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "اختر شهراً صالحاً"),
@@ -16,11 +17,6 @@ const schema = z.object({
 
 type GenerateInput = z.infer<typeof schema>;
 
-/**
- * توليد فواتير شهر واحد لتسجيلات فرع واحد:
- * التسجيلات النشطة التي بدأت قبل نهاية الشهر، في أفواج غير مغلقة.
- * القيد الفريد (enrollmentId, period) يمنع التكرار حتى مع نقرتين متزامنتين.
- */
 export async function generateInvoices(formData: FormData): Promise<void> {
   const result = await withAction<unknown, GenerateInput, { created: number; skipped: number }>({
     input: { period: formData.get("period"), branchId: formData.get("branchId") },
@@ -100,7 +96,8 @@ export async function generateInvoices(formData: FormData): Promise<void> {
   });
 
   if (!result.ok) {
-    redirect(`/center/invoices?error=${encodeURIComponent(result.error)}`);
+    setFlash("error", result.error ?? "حدث خطأ غير معروف");
+    redirect("/center/invoices");
   }
 
   revalidatePath("/center/invoices");
@@ -109,5 +106,7 @@ export async function generateInvoices(formData: FormData): Promise<void> {
     created > 0
       ? `تم إنشاء ${created} فاتورة${skipped > 0 ? ` وتخطي ${skipped} فاتورة موجودة مسبقاً` : ""}`
       : `كل فواتير هذا الشهر موجودة مسبقاً (${skipped})`;
-  redirect(`/center/invoices?ok=${encodeURIComponent(message)}`);
+  setFlash("success", message);
+  revalidatePath("/center/invoices");
+  redirect("/center/invoices");
 }

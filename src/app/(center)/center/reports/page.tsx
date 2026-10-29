@@ -4,16 +4,10 @@ import { canList, allowedBranchIds, requireCenterId } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { getActor } from "@/lib/session";
 import { PageHeader } from "@/components/ui/page-header";
-import { Alert } from "@/components/ui/alert";
 import { ExpenseForm } from "./expense-form";
 import { FinancialSummary } from "./financial-summary";
 
-export default async function ReportsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
-}) {
-  const { ok, error } = await searchParams;
+export default async function ReportsPage() {
   const actor = await getActor();
   if (!actor) redirect("/login");
   if (!canList(actor, "read", "expense")) redirect("/");
@@ -41,9 +35,6 @@ export default async function ReportsPage({
         title="التقارير المالية"
         description="إدارة المصاريف وصرف الأجور وتتبع المركز المالي."
       />
-
-      {ok ? <Alert variant="success">{ok}</Alert> : null}
-      {error ? <Alert variant="error">{error}</Alert> : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">

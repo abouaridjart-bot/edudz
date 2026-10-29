@@ -4,18 +4,12 @@ import { branchWhere, canList, scopeWhere } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { getActor } from "@/lib/session";
 import { PageHeader } from "@/components/ui/page-header";
-import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ToneBadge } from "@/components/ui/status-badge";
 import { StudentForm } from "./student-form";
 import { inviteStudentAccount } from "./actions";
 
-export default async function StudentsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
-}) {
-  const { ok, error } = await searchParams;
+export default async function StudentsPage() {
   const actor = await getActor();
   if (!actor) redirect("/login");
   if (!canList(actor, "read", "student")) redirect("/");
@@ -50,9 +44,6 @@ export default async function StudentsPage({
         title="الطلاب"
         description="سجل الطلاب، فروعهم ومستوياتهم، وحالة تفعيل حساباتهم."
       />
-
-      {ok ? <Alert variant="success">{ok}</Alert> : null}
-      {error ? <Alert variant="error">{error}</Alert> : null}
 
       {canList(actor, "create", "student") ? (
         <StudentForm branches={branches} levels={levels} streams={streams} />

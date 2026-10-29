@@ -6,7 +6,6 @@ import { formatDateTime, formatPeriod } from "@/lib/dates";
 import { allowedBranchIds, canList, requireCenterId, scopeWhere } from "@/lib/permissions";
 import { getActor } from "@/lib/session";
 import { PageHeader } from "@/components/ui/page-header";
-import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { invoiceStatus, payMethod } from "@/lib/labels";
@@ -20,12 +19,7 @@ const METHODS = [
   { value: "OTHER", label: "أخرى" },
 ] as const;
 
-export default async function PaymentsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
-}) {
-  const { ok, error } = await searchParams;
+export default async function PaymentsPage() {
   const actor = await getActor();
   if (!actor) redirect("/login");
   if (!canList(actor, "create", "payment")) redirect("/");
@@ -61,13 +55,6 @@ export default async function PaymentsPage({
         title="المدفوعات والإيصالات"
         description="تسجيل دفعات الطلاب على الفواتير المفتوحة مع إيصال مرقّم تلقائياً."
       />
-
-      {ok ? (
-        <Alert variant="success">
-          تم تسجيل الدفعة بنجاح — رقم الإيصال: <span className="font-semibold ltr-isolate">{ok}</span>
-        </Alert>
-      ) : null}
-      {error ? <Alert variant="error">{error}</Alert> : null}
 
       <section className="panel overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b p-4">
